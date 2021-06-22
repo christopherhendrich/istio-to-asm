@@ -120,3 +120,10 @@ chmod +x install_asm
 kubectl get pod -n istio-system -L istio.io/rev
 ```
 
+## Create a Istio Ingress Gateway for ASM
+We will create a second ingress gateway
+Create a test ingress for ASM
+```
+kubectl create ns asm-ingress
+kubectl label namespace asm-ingress istio-injection- istio.io/rev=asm-195-2 --overwrite
+```
