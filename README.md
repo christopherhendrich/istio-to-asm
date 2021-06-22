@@ -80,10 +80,10 @@ kubectl apply -f istio/controlplane.yaml
 ```
 kubectl create ns istio-ingress
 kubectl label namespace istio-ingress istio-injection=enabled 
-kubectl apply -f ingress1-deployment.yaml
-kubectl apply -f ingress1-service.yaml
-kubectl apply -f ingress1-hpa.yaml
-kubectl apply -f bookinfo-gateway-custom-ingress.yaml -n bookinfo
+kubectl apply -f istio/ingress1-deployment.yaml
+kubectl apply -f istio/ingress1-service.yaml
+kubectl apply -f istio/ingress1-hpa.yaml
+kubectl apply -f istio/bookinfo-gateway-custom-ingress.yaml -n bookinfo
 ```
 
 ## Enable the Istio on the bookinfo namespace
