@@ -1,0 +1,94 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: istio-controlplane
+  namespace: istio-system
+spec:
+  components:
+    ingressGateways:
+    - enabled: false
+    
+      name: istio-ingressgateway
+    pilot:
+      k8s:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                  - key: istio
+                    operator: In
+                    values:
+                    - pilot
+                topologyKey: failure-domain.beta.kubernetes.io/zone
+              weight: 100
+            requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                - key: istio
+                  operator: In
+                  values:
+                  - pilot
+              topologyKey: kubernetes.io/hostname
+        hpaSpec:
+          maxReplicas: 10
+          minReplicas: 2
+        nodeSelector: 
+          istio-nodepool: "true"
+        overlays:
+        - kind: Deployment
+          name: istiod
+          patches:
+          - path: spec.template.spec.hostAliases
+            value:
+            - hostnames:
+              - login.uat.foo-corp.com                      # DNS 
+              ip: 10.10.10.10                                  # GATEWAY IP
+        podAnnotations:
+          apm.datadoghq.com/env: '{ "DD_ENV": "nonprod", "DD_TRACE_ANALYTICS_ENABLED":
+            "true" }'
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        podDisruptionBudget:
+          minAvailable: 1
+        resources:
+          limits:
+            cpu: "4"
+            memory: 4Gi
+          requests:
+            cpu: 1000m
+            memory: 512Mi
+        tolerations:
+        - effect: NoSchedule
+          key: istio
+          operator: Equal
+          value: "true"
+  hub: gcr.io/istio-release
+  meshConfig:
+    accessLogEncoding: JSON                                 # Used by our DataDog
+    accessLogFile: /dev/stdout
+    defaultConfig:
+      holdApplicationUntilProxyStarts: true
+      proxyMetadata:
+        DD_TRACE_ANALYTICS_ENABLED: "true"
+      terminationDrainDuration: 50s
+      tracing:
+        sampling: 100
+    enableAutoMtls: true                                    # Overlaps PeerAuthentication "istio_mtls_mesh_policy.yaml" file
+    enableTracing: true
+  values:
+    global:
+      defaultNodeSelector:
+        istio-nodepool: "true"
+      defaultTolerations:
+      - effect: NoSchedule
+        key: istio
+        operator: Equal
+        value: "true"
+      # logAsJson: "true"                                     # Used by DataDog
+      # logging:
+      #   level: all:warn
+      # priorityClassName: common-critical
+      # proxy:
+      #  image: gcr.io/xxxxxx/proxyv2:1.9.5   # Custom Image for sidecar injection
+      #  tracer: datadog

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: igw-external-prod1
+  namespace: istio-ingress
+  labels:
+    gateway: igw-external-prod1
+    #visibility: public
+spec:
+  type: LoadBalancer
+  #externalTrafficPolicy: Local
+  #loadBalancerIP: "${element(igw-external-ip,index(environments,envrnmnt))}"
+  #loadBalancerSourceRanges:
+  #%{ for range in loadbalancer_external_sourceranges }
+  #    - ${range}
+  #%{ endfor }
+  selector:
+    gateway: igw-external-prod1
+  ports:
+  #adding HTTP
+  - name: http
+    port: 80
+  #
+  - name: https
+    port: 443
+    targetPort: 8443
+    protocol: TCP
+  - port: 15021
+    targetPort: 15021
+    name: status-port

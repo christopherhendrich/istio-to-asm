@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: igw-external-asm
+  namespace: asm-ingress
+spec:  
+  selector:
+    matchLabels:
+      gateway: igw-external-asm
+  template:
+    metadata:
+      annotations:
+        # Select the gateway injection template (rather than the default sidecar template)
+        inject.istio.io/templates: gateway
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        apm.datadoghq.com/env: '{ "DD_ENV": "prod", "DD_TRACE_ANALYTICS_ENABLED": "true" }'
+      labels:
+        # Set a unique label for the gateway. This is required to ensure Gateways can select this workload
+        gateway: igw-external-test
+        # Enable gateway injection. If connecting to a revisioned control plane, replace with "istio.io/rev: revision-name"
+        sidecar.istio.io/inject: "true"
+        #istio.io/rev: default       
+        istio.io/rev: asm-195-2 
+    spec:
+      affinity: 
+        podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                    - key: gateway
+                      operator: In
+                      values:
+                      - igw-external-asm
+                  topologyKey: failure-domain.beta.kubernetes.io/zone
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: istio
+                    operator: In
+                    values:
+                    - pilot
+                topologyKey: kubernetes.io/hostname
+      containers:
+      - name: istio-proxy
+        image: auto # The image will automatically update each time the pod starts.
+        resources:
+          requests:
+            cpu: "2"
+            memory: 512Mi
+          limits:
+            cpu: "4"
+            memory: 1Gi 
+      tolerations:
+      - effect: NoSchedule
+        key: istio
+        operator: Equal
+        value: "true"
+        # readinessProbe:
+        #     initialDelaySeconds: 10
+        #     successThreshold: 3
+        #     tcpSocket:
+        #       port: 15021
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: igw-external-asm-sds
+  namespace: asm-ingress
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: igw-external-asm-sds
+  namespace: asm-ingress
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: igw-external-asm-sds
+subjects:
+- kind: ServiceAccount
+  name: default
