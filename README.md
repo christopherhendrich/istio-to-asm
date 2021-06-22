@@ -12,7 +12,7 @@
 8. Create a new ingress gateway for ASM
 9. Inject bookinfo namespace with ASM revision label
 10. Perform rolling update on bookinfo app to inject ASM sidecar
-11. Uppdate bookinfo gateway to use the new ASM ingress gateway
+11. Update bookinfo gateway to use the new ASM ingress gateway
 12. Test Bookinfo app
 13. Remove Istio ingress gateway
 14. Remove Istio's Istiod
