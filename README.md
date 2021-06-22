@@ -35,5 +35,12 @@ gcloud beta container --project $PROJECT_ID clusters create "cluster-1" --zone "
 ```
 
 ## Clone istio-to-asm repository
-while the 
+While the cluster is getting deployed, open another shell and clone this repo
+```
+git clone https://github.com/christopherhendrich/istio-to-asm
+```
+
+```
+cd istio-to-asm
+```
 
