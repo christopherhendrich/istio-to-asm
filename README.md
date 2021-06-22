@@ -126,4 +126,30 @@ Create a test ingress for ASM
 ```
 kubectl create ns asm-ingress
 kubectl label namespace asm-ingress istio-injection- istio.io/rev=asm-195-2 --overwrite
+kubectl apply -f asm/asm-ingress-deployment.yaml
+kubectl apply -f asm/asm-ingress-hpa.yaml
+kubectl apply -f asm/asm-ingress-service.yaml
 ```
+
+## Update bookinfo gateway to use the ASM gateway
+```
+kubectl apply -f asm/bookinfo-gateway-asm-ingress.yaml -n bookinfo
+```
+
+## Grab the external IP of the ASM ingress
+```
+kubectl get service -n asm-ingress
+```
+Test that bookinfo is now using the ASM gateway (http://[ASM_GATEWAY_PUBLIC_IP]/productpage)
+
+## Migrate the bookinfo namespace over to ASM
+```
+kubectl label namespace bookinfo istio.io/rev=asm-195-2 istio-injection- --overwrite
+kubectl rollout restart deployment -n default
+```
+
+## Confirm that the bookinfo app is still working after we migrted to ASM 
+Test the application via http://[ASM_GATEWAY_PUBLIC_IP]/productpage
+
+
+
