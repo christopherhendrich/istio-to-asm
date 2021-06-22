@@ -16,7 +16,7 @@ spec:
         apm.datadoghq.com/env: '{ "DD_ENV": "prod", "DD_TRACE_ANALYTICS_ENABLED": "true" }'
       labels:
         # Set a unique label for the gateway. This is required to ensure Gateways can select this workload
-        gateway: igw-external-test
+        gateway: igw-external-asm
         # Enable gateway injection. If connecting to a revisioned control plane, replace with "istio.io/rev: revision-name"
         sidecar.istio.io/inject: "true"
         #istio.io/rev: default       
