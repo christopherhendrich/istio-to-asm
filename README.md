@@ -26,7 +26,7 @@ We will create a GKE cluster that will include a dedicated nodepool for Istio/AS
 Set up a variable for your GCP Project ID
 
 ```
-export PROJECT_ID=[Your project ID]'
+export PROJECT_ID=[Your project ID]
 ```
 
 Deploy the cluster
