@@ -59,5 +59,64 @@ Once the cluster is up and running connect to it via Cloud SDK
 gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project $PROJECT_ID
 ```
 
+## Install the Bookinfo app 
+```
+kubectl create ns bookinfo
+kubectl apply -f istio-1.9.4/samples/bookinfo/platform/kube/bookinfo.yaml -n bookinfo
+```
 
+## Install the Istio Operator
+```
+istioctl operator init
+```
+
+## Install the Istio Control Plane
+```
+kubectl create ns istio-system
+kubectl apply -f istio/controlplane.yaml 
+```
+
+## Install the Istio Ingress Gateway
+```
+kubectl create ns istio-ingress
+kubectl label namespace istio-ingress istio-injection=enabled 
+kubectl apply -f ingress1-deployment.yaml
+kubectl apply -f ingress1-service.yaml
+kubectl apply -f ingress1-hpa.yaml
+kubectl apply -f bookinfo-gateway-custom-ingress.yaml -n bookinfo
+```
+
+## Enable the Istio on the bookinfo namespace
+```
+kubectl label namespace default istio-injection=enabled 
+kubectl rollout restart deployment -n default
+```
+
+## Test Bookinfo via Istio Ingress Gateway
+Grab the public IP of the Istio Ingress Gateway
+```
+kubectl get service -n istio-ingress
+```
+User your browser to connect to the Bookinfo app
+```
+http://[public ip]/productpage
+```
+
+
+## Download the ASM script
+```
+curl https://storage.googleapis.com/csm-artifacts/asm/install_asm_1.9 > install_asm
+
+chmod +x install_asm
+```
+
+## Install ASM 
+```
+./install_asm   --project_id $PROJECT_ID   --cluster_name cluster-1   --cluster_location us-central1-c  --mode migrate   --ca citadel --verbose --output_dir ./asm/asm-install-files/ --custom-overlay asm/controlplane.yaml --enable-all
+```
+
+## Grab revision label
+```
+kubectl get pod -n istio-system -L istio.io/rev
+```
 
