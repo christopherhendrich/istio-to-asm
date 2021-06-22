@@ -88,8 +88,8 @@ kubectl apply -f istio/bookinfo-gateway-custom-ingress.yaml -n bookinfo
 
 ## Enable the Istio on the bookinfo namespace
 ```
-kubectl label namespace default istio-injection=enabled 
-kubectl rollout restart deployment -n default
+kubectl label namespace bookinfo istio-injection=enabled 
+kubectl rollout restart deployment -n bookinfo
 ```
 
 ## Test Bookinfo via Istio Ingress Gateway
