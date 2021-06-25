@@ -75,7 +75,7 @@ kubectl apply -f ./microservices-demo/release -n online-boutique
 
 ## Install Istio
 ### Option 1: Using the Istio Operator
-Install the IstioOperator
+#### Install the IstioOperator
 ```
 istioctl operator init
 ```
@@ -84,6 +84,17 @@ Install the Istio Control Plane
 kubectl create ns istio-system
 kubectl apply -f istio/controlplane.yaml 
 ```
+#### Install the Istio Ingress Gateway via k8s resource
+```
+kubectl create ns istio-ingress
+kubectl label namespace istio-ingress istio-injection=enabled 
+kubectl apply -f istio/ingress1-deployment.yaml
+kubectl apply -f istio/ingress1-service.yaml
+kubectl apply -f istio/ingress1-hpa.yaml
+kubectl apply -f istio/bookinfo-gateway-custom-ingress.yaml -n bookinfo
+
+
+
 ### Option 2: Default install using istioctl 
 This will install istiod and the default istio-ingressgateway
 ```
