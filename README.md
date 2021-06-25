@@ -66,12 +66,12 @@ kubectl apply -f istio-1.9.4/samples/bookinfo/platform/kube/bookinfo.yaml -n boo
 ```
 ## Install Online Boutique
 We will install a second application to understand the behaviour of the migration when one app is on istio and the other on ASM
-``
+```
 kubectl create ns online-boutique
 kubectl label namespace online-boutique istio-injection=enabled
 git clone https://github.com/GoogleCloudPlatform/microservices-demo.git
 kubectl apply -f ./microservices-demo/release -n online-boutique
-
+```
 
 ## Install the Istio Operator
 ```
