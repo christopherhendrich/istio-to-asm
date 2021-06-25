@@ -124,6 +124,22 @@ istiod-asm-182-2-5cd96f88f6-wm68b                1/1     Running   0          27
 ```
 
 
+### Cut over to the ASM version of the Istio Ingress Gateway deployment 
+The Istio Ingress Gateway consists of two items. 
+ 1. The service
+ 
+ 
+ 2. The deployment 
+ 
+ 
+ In order to maintain the external IP of the Istio Ingress Gateway, we only have a ASM Istio Ingress Gateway *Deployment* created. 
+ We will use the existing *Service*
+ 
+
+
+
+
+
 
 
 
