@@ -73,15 +73,21 @@ git clone https://github.com/GoogleCloudPlatform/microservices-demo.git
 kubectl apply -f ./microservices-demo/release -n online-boutique
 ```
 
-## Install the Istio Operator
+## Install Istio
+### Option 1: Using the Istio Operator
+Install the IstioOperator
 ```
 istioctl operator init
 ```
-
-## Install the Istio Control Plane
+Install the Istio Control Plane
 ```
 kubectl create ns istio-system
 kubectl apply -f istio/controlplane.yaml 
+```
+### Option 2: Default install using istioctl 
+This will install istiod and the default istio-ingressgateway
+```
+istioctl install
 ```
 
 ## Install the Istio Ingress Gateway
