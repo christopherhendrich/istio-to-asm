@@ -307,4 +307,5 @@ Delete the cluster to stop incurring charges.
 ```
 gcloud container clusters delete cluster-1 --project $PROJECT_ID --zone us-central1-c
 rm -rf asm/asm-install-files/*
+rm asm/asm-install-files/.asm_version 
 ```
