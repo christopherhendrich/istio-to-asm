@@ -130,13 +130,9 @@ Install the Mesh-CA validation script. This script will validate that the sideca
 ```
 curl https://raw.githubusercontent.com/GoogleCloudPlatform/anthos-service-mesh-packages/release-1.10-asm/scripts/ca-migration/migrate_ca > migrate_ca
 chmod +x migrate_ca
+sudo apt-get install gawk
 ```
 
-Install awk, if you do not already have it installed on your workstation. 
-MacOS
-```
-brew install awk
-```
 
 In order to complete the cutover to the ASM sidecars, we need to restart the pods. That will trigger the injectino of the ASM sidecar.
 ```
