@@ -22,10 +22,12 @@ istiod-9445656d7-9ppkj                  1/1     Running   0          81s
 Perform a rollout restart to inject the enoy sidecar proxy
 ```
 kubectl rollout restart deployment -n bookinfo
+kubectl apply -f ./microservices-demo/release -n online-boutique
 kubectl rollout restart deployment -n online-boutique
 ```
 You will see that each pod will now have 2 containers. 
 ```
+
 kubectl get po -n online-boutique
 kubectl get po -n bookinfo
 ```
