@@ -36,18 +36,7 @@ spec:
           minReplicas: 2
         nodeSelector: 
           istio-nodepool: "true"
-        overlays:
-        - kind: Deployment
-          name: istiod
-          patches:
-          - path: spec.template.spec.hostAliases
-            value:
-            - hostnames:
-              - login.uat.foo-corp.com                      # DNS 
-              ip: 10.10.10.10                                  # GATEWAY IP
-        podAnnotations:
-          apm.datadoghq.com/env: '{ "DD_ENV": "nonprod", "DD_TRACE_ANALYTICS_ENABLED":
-            "true" }'
+        podAnnotations:          
           cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         podDisruptionBudget:
           minAvailable: 1
@@ -65,16 +54,13 @@ spec:
           value: "true"
   hub: gcr.io/istio-release
   meshConfig:
-    accessLogEncoding: JSON                                 # Used by our DataDog
+    accessLogEncoding: JSON                                 
     accessLogFile: /dev/stdout
     defaultConfig:
       holdApplicationUntilProxyStarts: true
-      proxyMetadata:
-        DD_TRACE_ANALYTICS_ENABLED: "true"
       terminationDrainDuration: 50s
       tracing:
         sampling: 100
-    enableAutoMtls: true                                    # Overlaps PeerAuthentication "istio_mtls_mesh_policy.yaml" file
     enableTracing: true
   values:
     global:
@@ -85,10 +71,3 @@ spec:
         key: istio
         operator: Equal
         value: "true"
-      # logAsJson: "true"                                     # Used by DataDog
-      # logging:
-      #   level: all:warn
-      # priorityClassName: common-critical
-      # proxy:
-      #  image: gcr.io/xxxxxx/proxyv2:1.9.5   # Custom Image for sidecar injection
-      #  tracer: datadog

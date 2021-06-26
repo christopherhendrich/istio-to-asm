@@ -5,22 +5,13 @@ metadata:
   namespace: istio-ingress
   labels:
     gateway: istio-igw-external
-    #visibility: public
 spec:
   type: LoadBalancer
-  #externalTrafficPolicy: Local
-  #loadBalancerIP: "${element(igw-external-ip,index(environments,envrnmnt))}"
-  #loadBalancerSourceRanges:
-  #%{ for range in loadbalancer_external_sourceranges }
-  #    - ${range}
-  #%{ endfor }
   selector:
     gateway: istio-igw-external
   ports:
-  #adding HTTP
   - name: http
     port: 80
-  #
   - name: https
     port: 443
     targetPort: 8443

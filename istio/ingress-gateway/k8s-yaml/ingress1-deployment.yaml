@@ -12,9 +12,7 @@ spec:
       annotations:
         # Select the gateway injection template (rather than the default sidecar template)
         inject.istio.io/templates: gateway
-        cluster-autoscaler.kubernetes.io/safe-to-evict: "true" #due to known issue?
-        apm.datadoghq.com/env: '{ "DD_ENV": "prod", "DD_TRACE_ANALYTICS_ENABLED": "true" }'
-      
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true" #due to known issue?      
       labels:
         # Set a unique label for the gateway. This is required to ensure Gateways can select this workload
         gateway: istio-igw-external
