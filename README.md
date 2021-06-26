@@ -376,6 +376,12 @@ https://console.cloud.google.com/anthos/services?project=[PROJECT_ID]
 
 
 
+
+
+
+# WORK IN PROGRESS BELOW - IGNORE
+
+
 ## Option 1: Using the Istio Operator
 #### Install the IstioOperator
 ```
