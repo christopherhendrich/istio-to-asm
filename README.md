@@ -355,7 +355,7 @@ istiod-asm-1102-2-f6d5f54f-sn5pd                   1/1     Running   0          
 ```
 
 
-Your applciations are still working.
+Your applications are still working.
 Open the Online Boutique app in your browser
 ```
 http://[public_ip]
@@ -378,6 +378,12 @@ Delete the cluster to stop incurring charges.
 ```
 gcloud container clusters delete cluster-1 --project $PROJECT_ID --zone us-central1-c
 ```
+
+
+
+
+
+
 
 
 
