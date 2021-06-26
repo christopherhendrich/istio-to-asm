@@ -78,114 +78,21 @@ kubectl apply -f ./microservices-demo/release -n online-boutique
 
 ### [Lab 1: Migrating from default Istio to default ASM](/docs/Default-migration.md)
 
-> "This lab walks you through a migration from a default Istio deployment to a default ASM installation. You will migrate the applications using a canary process"
+> This lab walks you through a migration from a default Istio deployment to a default ASM installation. You will migrate the applications using a canary process
 
 
+### [Lab 2: Migrating from default Istio to default ASM and Citadel to Mesh CA with minimal downtime](/docs/Default-migration-with-CA.md)
+
+> Prior to Anthos Service Mesh 1.10, if you wanted to migrate from Istio on to Anthos Service Mesh with Mesh CA, you needed to schedule downtime because Anthos Service Mesh was not able to load multiple root certificates, which interrupted mutual TLS (mTLS) traffic during the migration.
+
+With Anthos Service Mesh 1.10 and higher, you can install a new in-cluster control plane with an option that distributes the Mesh CA root of trust to all proxies. After switching to the new control plane and restarting workloads, all proxies are configured with both the Istio CA and Mesh CA root of trust. Next, you install a new in-cluster control plane that has Mesh CA enabled. As you switch workloads over to the new control plane, mTLS traffic isn't interrupt.
+This lab walks you through a migration from a default Istio deployment to a default ASM installation, as well as migrating from Citadel CA to Mesh CA using the new process, available in ASM 1.10. You will migrate the applications using the canary process as in Lab1.
 
 
+### [Lab 3: Migrating from IstioOperator deployed Istio to ASM with custom Istio ingress gateways](/docs/Lab3-Migrating-with-custom-igw.md)
 
+> A customer might have their Istio ingress gateway deployed separately (maybe also in a separate namespace) from the Istio control plane, to follow best practices. They might also have multiple Istio ingress gateways deployed.  
 
+### [Lab 4: Migrating from IstioOperator deployed Istio to ASM using a custom overlay file](/docs/Lab4-Migrating-with-custom-overlay.md)
 
-
-
-# WORK IN PROGRESS BELOW - IGNORE
-
-
-## Option 1: Using the Istio Operator
-#### Install the IstioOperator
-```
-istioctl operator init
-```
-Install the Istio Control Plane
-```
-kubectl create ns istio-system
-kubectl apply -f istio/controlplane.yaml 
-```
-#### Install the Istio Ingress Gateway via k8s resource
-```
-kubectl create ns istio-ingress
-kubectl label namespace istio-ingress istio-injection=enabled 
-kubectl apply -f istio/ingress1-deployment.yaml
-kubectl apply -f istio/ingress1-service.yaml
-kubectl apply -f istio/ingress1-hpa.yaml
-kubectl apply -f istio/bookinfo-gateway-custom-ingress.yaml -n bookinfo
-
-
-
-### Option 2: Default install using istioctl 
-This will install istiod and the default istio-ingressgateway
-```
-istioctl install
-```
-
-## Install the Istio Ingress Gateway
-```
-kubectl create ns istio-ingress
-kubectl label namespace istio-ingress istio-injection=enabled 
-kubectl apply -f istio/ingress1-deployment.yaml
-kubectl apply -f istio/ingress1-service.yaml
-kubectl apply -f istio/ingress1-hpa.yaml
-kubectl apply -f istio/bookinfo-gateway-custom-ingress.yaml -n bookinfo
-```
-
-## Enable the Istio on the bookinfo namespace
-```
-kubectl label namespace bookinfo istio-injection=enabled 
-kubectl rollout restart deployment -n bookinfo
-```
-
-## Test Bookinfo via Istio Ingress Gateway
-Grab the public IP of the Istio Ingress Gateway
-```
-kubectl get service -n istio-ingress
-```
-User your browser to connect to the Bookinfo app
-```
-http://[public ip]/productpage
-```
-
-
-
-## Install ASM 
-```
-./install_asm   --project_id $PROJECT_ID   --cluster_name cluster-1   --cluster_location us-central1-c  --mode migrate   --ca citadel --verbose --output_dir ./asm/asm-install-files/ --custom-overlay asm/controlplane.yaml --enable-all
-```
-
-## Grab revision label
-```
-kubectl get pod -n istio-system -L istio.io/rev
-```
-
-## Create an Istio Ingress Gateway for ASM
-We will create a second ingress gateway
-Create a test ingress for ASM
-```
-kubectl create ns asm-ingress
-kubectl label namespace asm-ingress istio-injection- istio.io/rev=asm-195-2 --overwrite
-kubectl apply -f asm/asm-ingress-deployment.yaml
-kubectl apply -f asm/asm-ingress-hpa.yaml
-kubectl apply -f asm/asm-ingress-service.yaml
-```
-
-## Update bookinfo gateway to use the ASM gateway
-```
-kubectl apply -f asm/bookinfo-gateway-asm-ingress.yaml -n bookinfo
-```
-
-## Grab the external IP of the ASM ingress
-```
-kubectl get service -n asm-ingress
-```
-Test that bookinfo is now using the ASM gateway (http://[ASM_GATEWAY_PUBLIC_IP]/productpage)
-
-## Migrate the bookinfo namespace over to ASM
-```
-kubectl label namespace bookinfo istio.io/rev=asm-195-2 istio-injection- --overwrite
-kubectl rollout restart deployment -n default
-```
-
-## Confirm that the bookinfo app is still working after we migrted to ASM 
-Test the application via http://[ASM_GATEWAY_PUBLIC_IP]/productpage
-
-
-
+> Companies running Istio in production will have modified Istio control plane to ensure resilience and high availability. In order to ensure the same configurations around horizontal pod autoscaling, AntiAffinity, resource quotas, as well as any other customizations compared to the available Istio profiles, we will use an overlay file furing the ASM installation. 
