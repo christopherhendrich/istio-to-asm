@@ -78,6 +78,9 @@ kubectl apply -f ./microservices-demo/release -n online-boutique
 This example has you install the default Istio profile, consisting of Istiod and a Istio IngressGateway, install the default ASM 1.10 including a revisioned-istio-ingressgateway. This example is to familiarize you with the high-level process and have you complete successful migration from Istio to ASM. 
 In real life scenarios with customers that use Istio in production, it is very likely you will have to perform one of the more advanced examples.
 
+(./images/Istio-to-ASM-default-install.gif)
+
+
 ### Install Istio
 Install Istiod (Istio control plane) using 'istioctl'
 ```
