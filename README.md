@@ -5,6 +5,8 @@ This repository will walk through different migration scenarios. It is meant to 
 
 
 ## Preparations
+This guide was written for CloudShell. Some commands might not work as expected on MacOS or Windows. 
+
 This section covers:
 1. Create the GKE Cluster
 2. Download this repository
