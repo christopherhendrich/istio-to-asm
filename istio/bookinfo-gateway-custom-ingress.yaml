@@ -4,7 +4,8 @@ metadata:
   name: bookinfo-gateway
 spec:
   selector:
-    gateway: igw-external-prod1 
+    #gateway: igw-external-prod1
+    app: istio-ingressgateway 
   servers:
   - port:
       number: 80
