@@ -78,7 +78,7 @@ kubectl apply -f ./microservices-demo/release -n online-boutique
 
 ### [Lab 1: Migrating from default Istio to default ASM](/docs/Default-migration.md)
 
-> "This lab walks you through a migration from a default Istio deployment to a default ASM installation. You will migrate the applictions using a canary process"
+> "This lab walks you through a migration from a default Istio deployment to a default ASM installation. You will migrate the applications using a canary process"
 
 
 
