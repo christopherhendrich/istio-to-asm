@@ -102,6 +102,8 @@ istiod-asm-1102-2-f6d5f54f-sn5pd                   1/1     Running   0          
 ```
 
 
+
+
 ### Cut over to the ASM version of the Istio Ingress Gateway deployment 
 The Istio Ingress Gateway consists of two items. 
  1. The gateway service
@@ -117,13 +119,22 @@ In order to maintain the external IP of the Istio Ingress Gateway, we created a 
 While we added the revision to the gateway service, your applications are still working as expected. Go ahead and retry your applications!
 
 ### Replace the Istio sidecar with the ASM sidecar for the Online Boutique application 
-Remove the *istio-injection=enabled* label and add the *istio.io/rev=asm-1102-2* label to the online-boutique namespace.
+Remove the *istio-injection=enabled* label and add the *istio.io/rev=asm-1102-2-distribute-root* label to the online-boutique namespace. 
 ```
-kubectl label namespace online-boutique istio.io/rev=asm-1102-2 istio-injection- --overwrite
+kubectl label namespace online-boutique istio.io/rev=asm-1102-2-distribute-root istio-injection- --overwrite
 ```
 While the namespace labels have now been changed, your application has not been affected. The Istio control plane is still connected. 
-In order to complete the cutover to the ASM sidecars, we need to restart the pods. That will trigger the injectino of the ASM sidecar. 
+ 
+Install the Mesh-CA validation script. This script will validate that the sidecar is configured with both, the old Citadel, as well as the new Mesh-CA certificate. This will ensure that your applications that you migrate to Mesh-CA are still able to talk to workloads still running with Citadel. 
 
+```
+curl https://raw.githubusercontent.com/GoogleCloudPlatform/anthos-service-mesh-packages/release-1.10-asm/scripts/ca-migration/migrate_ca > migrate_ca
+chmod +x migrate_ca
+```
+
+
+
+In order to complete the cutover to the ASM sidecars, we need to restart the pods. That will trigger the injectino of the ASM sidecar.
 ```
 kubectl rollout restart deployment -n online-boutique
 ```
@@ -307,4 +318,5 @@ Delete the cluster to stop incurring charges.
 ```
 gcloud container clusters delete cluster-1 --project $PROJECT_ID --zone us-central1-c
 rm -rf asm/asm-install-files/*
+rm asm/asm-install-files/.asm_version 
 ```
