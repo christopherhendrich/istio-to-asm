@@ -135,7 +135,7 @@ reviews-v2-65ddc99956-k5ffs       2/2     Running   0          2m42s
 reviews-v3-8f967998d-ljhvp        2/2     Running   0          2m42s
 ```
 
-Rerun the commands until you also see *2/2 Ready* for each pod in both namespaces.
+Rerun the commands until you see *2/2 Ready* for each pod in both namespaces.
 
 ### Verify applications are working as expected
 Both applications are now reachable via the Istio Ingress Gateway. 
