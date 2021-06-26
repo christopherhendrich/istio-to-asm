@@ -5,7 +5,7 @@ This example has you install the default Istio profile, consisting of Istiod and
 
 Migrating to Anthos Service Mesh certificate authority (Mesh CA) from Istio CA (also known as Citadel) requires migrating the root of trust. Prior to Anthos Service Mesh 1.10, if you wanted to migrate from Istio on Google Kubernetes Engine (GKE) to Anthos Service Mesh with Mesh CA, you needed to schedule downtime because Anthos Service Mesh was not able to load multiple root certificates. Therefore, during the migration, the newly deployed workloads trust the new root certificate, while others trust the old root certificate. Workloads using certificates signed by different root certificates can't authenticate with each other. This means that mutual TLS (mTLS) traffic is interrupted during the migration. The entire cluster only fully recovers when the control plane and all workloads in all namespaces are redeployed with Mesh CA's certificate. If your mesh has multiple clusters with workloads that send requests to workloads on another cluster, all workloads on those clusters need to be updated as well.
 
-The lab is base don the [official documenation](https://cloud.google.com/service-mesh/docs/ca-migration).
+The lab is base don the [official documentation](https://cloud.google.com/service-mesh/docs/ca-migration).
 
 ### Install Istio
 Install Istiod (Istio control plane) using 'istioctl'
