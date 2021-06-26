@@ -306,4 +306,5 @@ https://console.cloud.google.com/anthos/services?project=[PROJECT_ID]
 Delete the cluster to stop incurring charges.
 ```
 gcloud container clusters delete cluster-1 --project $PROJECT_ID --zone us-central1-c
+rm -rf asm/asm-install-files/*
 ```
