@@ -80,7 +80,7 @@ kubectl apply -f ./microservices-demo/release -n online-boutique
 
 > This lab walks you through a migration from a default Istio deployment to a default ASM installation. You will migrate the applications using a canary process
 
-![Lab1 overview](../images/Istio-to-ASM-default-install.gif)
+![Lab1 overview](./images/Istio-to-ASM-default-install.gif)
 
 ### [Lab 2: Migrating from default Istio to default ASM and Citadel to Mesh CA with minimal downtime](/docs/Default-migration-with-CA.md)
 
