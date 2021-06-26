@@ -1,7 +1,7 @@
 # Istio to ASM migration examples
 
 ## Summary
-This repository will walk through different migration scenarios. It is meant to give engineers more to real life scenarios
+This repository will walk through different migration scenarios. It is meant to prepare engineers for more real to life scenarios.
 
 
 ## Preparations
