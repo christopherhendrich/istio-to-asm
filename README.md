@@ -63,7 +63,6 @@ gcloud container clusters get-credentials cluster-1 --zone us-central1-c --proje
 kubectl create ns bookinfo
 kubectl label namespace bookinfo istio-injection=enabled
 kubectl apply -f istio-1.9.5/samples/bookinfo/platform/kube/bookinfo.yaml -n bookinfo
-kubectl apply -f istio-1.9.5/samples/bookinfo/networking/bookinfo-gateway.yaml -n bookinfo
 ```
 ### 7. Install Online Boutique
 We will install a second application to understand the behaviour of the migration when one app is on istio and the other on ASM
