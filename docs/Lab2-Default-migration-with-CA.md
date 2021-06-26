@@ -121,7 +121,7 @@ While we added the revision to the gateway service, your applications are still 
 ### Replace the Istio sidecar with the ASM sidecar for the Online Boutique application 
 Remove the *istio-injection=enabled* label and add the *istio.io/rev=asm-1102-2-distribute-root* label to the online-boutique namespace. 
 ```
-kubectl label namespace online-boutique istio.io/rev=asm-1102-2-distribute-root istio-injection- --overwrite
+kubectl label namespace online-boutique istio.io/rev=asm-1102-2 istio-injection- --overwrite
 ```
 While the namespace labels have now been changed, your application has not been affected. The Istio control plane is still connected. 
  
@@ -132,7 +132,11 @@ curl https://raw.githubusercontent.com/GoogleCloudPlatform/anthos-service-mesh-p
 chmod +x migrate_ca
 ```
 
-
+Install awk, if you do not already have it installed on your workstation. 
+MacOS
+```
+brew install awk
+```
 
 In order to complete the cutover to the ASM sidecars, we need to restart the pods. That will trigger the injectino of the ASM sidecar.
 ```
@@ -236,6 +240,11 @@ reviews-v2-65ddc99956-k5ffs       2/2     Running   0          40m   default
 reviews-v3-8f967998d-ljhvp        2/2     Running   0          40m   default
 ```
 
+### Validate that the sidecar proxies for the online-boutique workloads on the cluster are configured with both the old and new root certificates:
+
+```
+./migrate_ca check-root-cert
+```
 
 ### Migrate the Bookinfo app to ASM
 Congratulations, your first app is migrated. We will rpeat the same process for the Bookinfo app. You would rpeat this process for all of your applications until all your applications are migrated to ASM. 
