@@ -76,13 +76,13 @@ kubectl apply -f ./microservices-demo/release -n online-boutique
 
 ## Labs
 
-### [Lab 1: Migrating from default Istio to default ASM](/docs/Default-migration.md)
+### [Lab 1: Migrating from default Istio to default ASM](/docs/Lab1-Default-migration.md)
 
 > This lab walks you through a migration from a default Istio deployment to a default ASM installation. You will migrate the applications using a canary process
 
 ![Lab1 overview](./images/Istio-to-ASM-default-install.gif)
 
-### [Lab 2: Migrating from default Istio to default ASM and Citadel to Mesh CA with minimal downtime](/docs/Default-migration-with-CA.md)
+### [Lab 2: Migrating from default Istio to default ASM and Citadel to Mesh CA with minimal downtime](/docs/Lab2-Default-migration-with-CA.md)
 
 > Prior to Anthos Service Mesh 1.10, if you wanted to migrate from Istio on to Anthos Service Mesh with Mesh CA, you needed to schedule downtime because Anthos Service Mesh was not able to load multiple root certificates, which interrupted mutual TLS (mTLS) traffic during the migration.
 With Anthos Service Mesh 1.10 and higher, you can install a new in-cluster control plane with an option that distributes the Mesh CA root of trust to all proxies. After switching to the new control plane and restarting workloads, all proxies are configured with both the Istio CA and Mesh CA root of trust. Next, you install a new in-cluster control plane that has Mesh CA enabled. As you switch workloads over to the new control plane, mTLS traffic isn't interrupt.
