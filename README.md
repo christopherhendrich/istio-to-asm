@@ -355,12 +355,28 @@ istiod-asm-1102-2-f6d5f54f-sn5pd                   1/1     Running   0          
 ```
 
 
+Your applciations are still working.
+Open the Online Boutique app in your browser
+```
+http://[public_ip]
+```
+
+Open your Bookinfo application in your browser
+```
+http://[public_ip]/productpage
+```
+
+The Anthos Service Mesh UI is also displaying your services now
+```
+https://console.cloud.google.com/anthos/services?project=[PROJECT_ID]
+```
+
+### Congratulations! Your migration is complete!
 
 
 
 
-
-### Option 1: Using the Istio Operator
+## Option 1: Using the Istio Operator
 #### Install the IstioOperator
 ```
 istioctl operator init
