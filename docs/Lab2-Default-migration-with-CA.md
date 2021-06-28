@@ -1,5 +1,3 @@
-# Work in progress
-
 ## Lab 2: Migration of default Istio to default ASM and from Citadel CA to Mesh CA
 This example has you install the default Istio profile, consisting of Istiod and a Istio IngressGateway, install the default ASM 1.10 including a revisioned-istio-ingressgateway and migrate the certificate authority from Citadel to the Google managed Mesh-CA. This example is meant to familiarize you with the high-level process and have you complete successful migration from Istio to ASM using the canary method. In real life scenarios with customers that use Istio in production, it is very likely you will have to perform one of the more advanced examples.
 
