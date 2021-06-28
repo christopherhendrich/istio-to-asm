@@ -245,7 +245,7 @@ reviews-v3-8f967998d-ljhvp        2/2     Running   0          40m   default
 ```
 
 ### Migrate the Bookinfo app to ASM
-Congratulations, your first app is migrated. We will rpeat the same process for the Bookinfo app. You would rpeat this process for all of your applications until all your applications are migrated to ASM. 
+Congratulations, your first app is migrated. We will repeat the same process for the Bookinfo app. You would rpeat this process for all of your applications until all your applications are migrated to ASM. 
 ```
 kubectl label namespace bookinfo istio.io/rev=asm-1102-2 istio-injection- --overwrite
 kubectl rollout restart deployment -n bookinfo
@@ -264,6 +264,47 @@ ratings-v1-75c4fd7585-888dg       2/2     Running   0          41s   asm-1102-2
 reviews-v1-86b48465c7-5kztk       2/2     Running   0          41s   asm-1102-2
 reviews-v2-7bd994dbd9-zvbqf       2/2     Running   0          41s   asm-1102-2
 reviews-v3-86dd7c489c-c66sm       2/2     Running   0          40s   asm-1102-2
+```
+
+### Validate that the sidecar proxies for the online-boutique workloads on the cluster are configured with both the old and new root certificates:
+Once all your applications are migrated over, you can check that your applications are configured with certificates of both conrtol planes
+```
+./migrate_ca check-root-cert
+```
+Output
+```
+Checking the root certificates loaded on each pod...
+
+Namespace: asm-system
+
+Namespace: bookinfo
+ - details-v1-6d59dcdc58-9mhjv.bookinfo trusts [CITADEL MESHCA]
+ - productpage-v1-747cd98958-tdjh4.bookinfo trusts [CITADEL MESHCA]
+ - ratings-v1-84b9d5dbfd-jxkv4.bookinfo trusts [CITADEL MESHCA]
+ - reviews-v1-cf87f4f76-vzxl7.bookinfo trusts [CITADEL MESHCA]
+ - reviews-v2-ffc55cc8-8x6pw.bookinfo trusts [CITADEL MESHCA]
+ - reviews-v3-75d6cc6bd4-8dgcd.bookinfo trusts [CITADEL MESHCA]
+
+Namespace: default
+
+Namespace: istio-system
+ - istio-ingressgateway-5b47bfbd5f-xqt9r.istio-system trusts [CITADEL MESHCA]
+ - istio-ingressgateway-asm-1102-2-distributed-root-785c4f47fmxfn7.istio-system trusts [CITADEL MESHCA]
+ - istio-ingressgateway-asm-1102-2-distributed-root-785c4f47frds65.istio-system trusts [CITADEL MESHCA]
+
+Namespace: online-boutique
+ - adservice-85c44bf5cf-ncmbt.online-boutique trusts [CITADEL MESHCA]
+ - cartservice-8676b4d4bd-wkr72.online-boutique trusts [CITADEL MESHCA]
+ - checkoutservice-5c65f69c7f-hxdtr.online-boutique trusts [CITADEL MESHCA]
+ - currencyservice-58c98d8c7-trftz.online-boutique trusts [CITADEL MESHCA]
+ - emailservice-7c8f6b7b75-7rfqk.online-boutique trusts [CITADEL MESHCA]
+ - frontend-c69cd7854-jp2w7.online-boutique trusts [CITADEL MESHCA]
+ - loadgenerator-8668f87b8-68tls.online-boutique trusts [CITADEL MESHCA]
+ - paymentservice-69c79c5979-pwgpr.online-boutique trusts [CITADEL MESHCA]
+ - productcatalogservice-5687c64f4c-qjlmz.online-boutique trusts [CITADEL MESHCA]
+ - recommendationservice-59ffbf54bf-wjgk5.online-boutique trusts [CITADEL MESHCA]
+ - redis-cart-7c7cb69bdc-682kt.online-boutique trusts [CITADEL MESHCA]
+ - shippingservice-95c86c5c5-5kk2t.online-boutique trusts [CITADEL MESHCA]
 ```
 
 ### Finalize the migration
@@ -318,7 +359,143 @@ The Anthos Service Mesh UI is also displaying your services now
 https://console.cloud.google.com/anthos/services?project=[PROJECT_ID]
 ```
 
-### Congratulations! Your migration is complete!
+## Migrate to Mesh CA
+### Install a new control plane with Mesh CA enabled
+Now that we are migrated to an ASM Control Plane, we migrate from Citadel to Mesh CA. 
+Create a new ASM control plane revision that has Mesh CA enabled. 
+```
+./install_asm \
+  --project_id  $PROJECT_ID \
+  --cluster_name cluster-1 \
+  --cluster_location us-central1-c \
+  --mode install \
+  --ca mesh_ca \
+  --enable_all \
+  --option revisioned-istio-ingressgateway \
+  --option ca-migration-meshca \
+  --revision_name asm-1102-2-mesh-ca-migration \
+  --output_dir asm-1102-2-mesh-ca-migration
+```
+
+Once the command completes, you will see both control planes deployed. 
+```
+kbectl get pod -n istio-system -L istio.io/rev
+```
+Output example:
+```
+NAME                                                              READY   STATUS    RESTARTS   AGE     REV
+istio-ingressgateway-asm-1102-2-distributed-root-785c4f47fmxfn7   1/1     Running   0          3h23m   asm-1102-2-distributed-root
+istio-ingressgateway-asm-1102-2-distributed-root-785c4f47frds65   1/1     Running   0          3h23m   asm-1102-2-distributed-root
+istio-ingressgateway-asm-1102-2-mesh-ca-migration-5f76bb55sqj9h   1/1     Running   0          42s     asm-1102-2-mesh-ca-migration
+istio-ingressgateway-asm-1102-2-mesh-ca-migration-5f76bb55zhn9b   1/1     Running   0          57s     asm-1102-2-mesh-ca-migration
+istiod-asm-1102-2-distributed-root-64f497f6ff-4stnn               1/1     Running   0          3h23m   asm-1102-2-distributed-root
+istiod-asm-1102-2-distributed-root-64f497f6ff-nlc6d               1/1     Running   0          3h23m   asm-1102-2-distributed-root
+istiod-asm-1102-2-mesh-ca-migration-5d8d5bbb45-r5zrf              1/1     Running   0          74s     asm-1102-2-mesh-ca-migration
+istiod-asm-1102-2-mesh-ca-migration-5d8d5bbb45-rwwtw              1/1     Running   0          74s     asm-1102-2-mesh-ca-migration
+```
+
+### Switch the Istio ingress gateway to the new revision. 
+```
+kubectl patch service -n istio-system istio-ingressgateway --type='json' -p='[{"op": "replace", "path": "/spec/selector/service.istio.io~1canonical-revision", "value": "asm-1102-2-mesh-ca-migration"}]'
+```
+
+### Migrate the Bookinfo and Online Boutique applications to the new controlplane
+```
+kubectl label namespace bookinfo istio.io/rev=asm-1102-2-mesh-ca-migration --overwrite
+kubectl rollout restart deployment -n bookinfo
+kubectl label namespace online-boutique istio.io/rev=asm-1102-2-mesh-ca-migration --overwrite
+kubectl rollout restart deployment -n online-boutique
+```
+
+### Verify that the application is working as expected
+```
+kubectl get pods -n bookinfo -l istio.io/rev=asm-1102-2-mesh-ca-migration
+```
+Expected output should be similar to:
+```
+NAME                             READY   STATUS    RESTARTS   AGE
+details-v1-7c8f6577b8-7d62n      2/2     Running   0          113s
+productpage-v1-7bb76c86d-sqqmr   2/2     Running   0          113s
+ratings-v1-b8679d656-wnbpg       2/2     Running   0          113s
+reviews-v1-69f57fd9fd-hqx4q      2/2     Running   0          112s
+reviews-v2-77775cf696-p98mf      2/2     Running   0          112s
+reviews-v3-8569d448fd-c5bjz      2/2     Running   0          112s
+```
+```
+kubectl get pods -n online-boutique -l istio.io/rev=asm-1102-2-mesh-ca-migration
+```
+Expected output should be similar to:
+```
+NAME                                     READY   STATUS    RESTARTS   AGE
+adservice-78dbcfd4bc-mq7kc               2/2     Running   0          113s
+cartservice-866c9bb4dd-4nbpm             2/2     Running   0          113s
+checkoutservice-5f6f8cfb87-hm45z         2/2     Running   0          113s
+currencyservice-f9859f977-52st7          2/2     Running   0          113s
+emailservice-77f47c8c5-dmrjt             2/2     Running   0          112s
+frontend-8cc986b94-xs55r                 2/2     Running   0          112s
+loadgenerator-574fc68fd8-xbbhp           2/2     Running   3          112s
+paymentservice-c4487d8bc-xmtqz           2/2     Running   0          112s
+productcatalogservice-69764b77f5-xd967   2/2     Running   0          112s
+recommendationservice-5f6d4cb9bf-cf8nl   2/2     Running   0          112s
+redis-cart-75c7d79499-wx96f              2/2     Running   0          112s
+shippingservice-767b98c9ff-bhvck         2/2     Running   0          111s
+```
+
+### Check that yuor applications are still up and accessible
+We have migrated to the new ASM control plane now and the workloads are now using Mesh-CA. Confirm that your applciations are still running as epxected.
+
+Open the Online Boutique app in your browser
+```
+http://[public_ip]
+```
+
+Open your Bookinfo application in your browser
+```
+http://[public_ip]/productpage
+```
+
+### Clean up the old Citadel ASM Control Plane
+This is very similar to the cleanup we performed for the Istio control plane, but we have to include the revision of the old ASM control plane this time. We also have to make sure we are applying the istiod-service from the folder we used as *output-dir* for this control plane installation.  
+```
+kubectl apply -f asm-1102-2-mesh-ca-migration/asm/istio/istiod-service.yaml
+kubectl delete deploy -l app=istio-ingressgateway,istio.io/rev=asm-1102-2-distributed-root -n istio-system --ignore-not-found=true
+kubectl delete Service,Deployment,HorizontalPodAutoscaler,PodDisruptionBudget istiod-asm-1102-2-distributed-root -n istio-system --ignore-not-found=true
+kubectl delete IstioOperator installed-state-asm-1102-2-distributed-root -n istio-system
+```
+
+### Remove the CA secrets and restart the new control plane
+It is recommended to take a backup of the old certificates, in case they are needed for any reason at a later point.
+```
+kubectl get secret/cacerts -n istio-system -o yaml > save_file_1
+kubectl get secret/istio-ca-secret -n istio-system -o yaml > save_file_2
+```
+
+Remove the CA secrets in the cluster associated with the old CA
+```
+kubectl delete secret cacerts istio-ca-secret -n istio-system --ignore-not-found
+```
+Restart the control plane
+```
+kubectl rollout restart deployment -n istio-system
+```
+
+### Confirm applications are up
+We migrated from Istio to ASM and from Citadel to Mesh CA. 
+Check that your applications are working as expected for a last time. 
+
+Your applications are still working.
+Open the Online Boutique app in your browser
+```
+http://[public_ip]
+```
+
+Open your Bookinfo application in your browser
+```
+http://[public_ip]/productpage
+
+
+
+### Congratulations! Your migration from Istio to ASM and from Citadel to Mesh CA is complete!
 
 ## Cleanup 
 Delete the cluster to stop incurring charges.
