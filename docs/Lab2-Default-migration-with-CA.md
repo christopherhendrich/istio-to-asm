@@ -490,7 +490,7 @@ http://[public_ip]
 Open your Bookinfo application in your browser
 ```
 http://[public_ip]/productpage
-
+```
 
 
 ### Congratulations! Your migration from Istio to ASM and from Citadel to Mesh CA is complete!
