@@ -113,7 +113,7 @@ In order to maintain the external IP of the Istio Ingress Gateway, we created a 
 
  Switch the istio-ingressgateway to the new revision. In the following command, change REVISION to the value that matches the revision label of the new version.
  ```
- kubectl patch service -n istio-system istio-ingressgateway --type='json' -p='[{"op": "replace", "path": "/spec/selector/service.istio.io~1canonical-revision", "value": "asm-1102-2"}]'
+ kubectl patch service -n istio-system istio-ingressgateway --type='json' -p='[{"op": "replace", "path": "/spec/selector/service.istio.io~1canonical-revision", "value": "asm-1102-2-distributed-root"}]'
 ```
 
 While we added the revision to the gateway service, your applications are still working as expected. Go ahead and retry your applications!
