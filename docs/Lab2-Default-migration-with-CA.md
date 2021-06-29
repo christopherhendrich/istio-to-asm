@@ -83,7 +83,7 @@ http://[External IP]
 We will install the default version of ASM, including a revisioned ingress gateway. At this point we still need to use *--ca citadel*, as the switch to Mesh-CA will happen in a later step, but we will add the *--option ca-migration-citadel*, compared to Lab 1. 
 
 ```
-./install_asm   --project_id $PROJECT_ID   --cluster_name cluster-1   --cluster_location us-central1-c  --mode migrate   --ca citadel --verbose --output_dir ./asm/asm-install-files/ --enable-all --option revisioned-istio-ingressgateway --option ca-migration-citadel --revision_name asm-1102-2
+./install_asm   --project_id $PROJECT_ID   --cluster_name cluster-1   --cluster_location us-central1-c  --mode install   --ca citadel --verbose --output_dir ./asm/asm-install-files/ --enable-all --option revisioned-istio-ingressgateway --option ca-migration-citadel --revision_name asm-1102-2
 ```
 
 After the successful installation, you will see both istio and ASM control planes as well as the Istio and ASM ingress gateways
