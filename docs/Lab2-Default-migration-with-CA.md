@@ -83,7 +83,7 @@ http://[External IP]
 We will install the default version of ASM, including a revisioned ingress gateway. At this point we still need to use *--ca citadel*, as the switch to Mesh-CA will happen in a later step, but we will add the *--option ca-migration-citadel*, compared to Lab 1. 
 
 ```
-./install_asm   --project_id $PROJECT_ID   --cluster_name cluster-1   --cluster_location us-central1-c  --mode migrate   --ca citadel --verbose --output_dir ./asm/asm-install-files/ --enable-all --option revisioned-istio-ingressgateway --option ca-migration-citadel --revision_name asm-1102-2-distributed-root
+./install_asm   --project_id $PROJECT_ID   --cluster_name cluster-1   --cluster_location us-central1-c  --mode migrate   --ca citadel --verbose --output_dir ./asm/asm-install-files/ --enable-all --option revisioned-istio-ingressgateway --option ca-migration-citadel --revision_name asm-1102-2
 ```
 
 After the successful installation, you will see both istio and ASM control planes as well as the Istio and ASM ingress gateways
@@ -113,13 +113,13 @@ In order to maintain the external IP of the Istio Ingress Gateway, we created a 
 
  Switch the istio-ingressgateway to the new revision. In the following command, change REVISION to the value that matches the revision label of the new version.
  ```
- kubectl patch service -n istio-system istio-ingressgateway --type='json' -p='[{"op": "replace", "path": "/spec/selector/service.istio.io~1canonical-revision", "value": "asm-1102-2-distributed-root"}]'
+ kubectl patch service -n istio-system istio-ingressgateway --type='json' -p='[{"op": "replace", "path": "/spec/selector/service.istio.io~1canonical-revision", "value": "asm-1102-2"}]'
 ```
 
 While we added the revision to the gateway service, your applications are still working as expected. Go ahead and retry your applications!
 
 ### Replace the Istio sidecar with the ASM sidecar for the Online Boutique application 
-Remove the *istio-injection=enabled* label and add the *istio.io/rev=asm-1102-2-distribute-root* label to the online-boutique namespace. 
+Remove the *istio-injection=enabled* label and add the *istio.io/rev=asm-1102-2* label to the online-boutique namespace. 
 ```
 kubectl label namespace online-boutique istio.io/rev=asm-1102-2 istio-injection- --overwrite
 ```
@@ -377,7 +377,7 @@ Create a new ASM control plane revision that has Mesh CA enabled.
 
 Once the command completes, you will see both control planes deployed. 
 ```
-kbectl get pod -n istio-system -L istio.io/rev
+kubectl get pod -n istio-system -L istio.io/rev
 ```
 Output example:
 ```
