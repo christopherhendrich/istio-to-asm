@@ -456,9 +456,9 @@ http://[public_ip]/productpage
 This is very similar to the cleanup we performed for the Istio control plane, but we have to include the revision of the old ASM control plane this time. We also have to make sure we are applying the istiod-service from the folder we used as *output-dir* for this control plane installation.  
 ```
 kubectl apply -f asm-1102-2-mesh-ca-migration/asm/istio/istiod-service.yaml
-kubectl delete deploy -l app=istio-ingressgateway,istio.io/rev=asm-1102-2-distributed-root -n istio-system --ignore-not-found=true
-kubectl delete Service,Deployment,HorizontalPodAutoscaler,PodDisruptionBudget istiod-asm-1102-2-distributed-root -n istio-system --ignore-not-found=true
-kubectl delete IstioOperator installed-state-asm-1102-2-distributed-root -n istio-system
+kubectl delete deploy -l app=istio-ingressgateway,istio.io/rev=asm-1102-2 -n istio-system --ignore-not-found=true
+kubectl delete Service,Deployment,HorizontalPodAutoscaler,PodDisruptionBudget istiod-asm-1102-2 -n istio-system --ignore-not-found=true
+kubectl delete IstioOperator installed-state-asm-1102-2 -n istio-system
 ```
 
 ### Remove the CA secrets and restart the new control plane
