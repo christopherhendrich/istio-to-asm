@@ -6,9 +6,57 @@ metadata:
 spec:
   components:
     ingressGateways:
-    - enabled: false
-    
-      name: istio-ingressgateway
+      - name: istio-ingressgateway
+        namespace: istio-system
+        enabled: true
+        label:
+          istio: ingressgateway
+        k8s:
+          podAnnotations:
+            cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+          hpaSpec:
+            maxReplicas: 10
+            minReplicas: 3
+          resources:
+            requests:
+              cpu: "2"
+              memory: 512Mi
+            limits:
+              cpu: "4"
+              memory: 1Gi
+          podDisruptionBudget:
+            minAvailable: 2        
+          readinessProbe:
+            initialDelaySeconds: 10
+            successThreshold: 3
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                    - key: istio
+                      operator: In
+                      values:
+                      - istio-ingressgateway
+                  topologyKey: failure-domain.beta.kubernetes.io/zone
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                  - key: istio
+                    operator: In
+                    values:
+                    - istio-ingressgateway
+                topologyKey: kubernetes.io/hostname
+          service:
+            ports:
+            - port: 443
+              name: https
+              targetPort: 8443
+            - port: 80
+              name: http2
+              targetPort: 8080
     pilot:
       k8s:
         affinity:

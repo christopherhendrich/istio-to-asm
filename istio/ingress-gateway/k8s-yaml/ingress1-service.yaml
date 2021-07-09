@@ -2,13 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: istio-igw-external
-  namespace: istio-ingress
+  namespace: istio-system
   labels:
-    gateway: istio-igw-external
+    gateway: ingress-gateway
 spec:
   type: LoadBalancer
   selector:
-    gateway: istio-igw-external
+    gateway: ingress-gateway
   ports:
   - name: http
     port: 80

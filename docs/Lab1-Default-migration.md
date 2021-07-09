@@ -5,11 +5,11 @@ This example has you install the default Istio profile, consisting of Istiod and
 
 
 ### Install Istio
-Install Istiod (Istio control plane) using 'istioctl'
+Install Istiod (Istio control plane) using 'istioctl'. 
 ```
 istioctl install
 ```
-This will install 'istiod' and the 'istio-ingressgateway' in the 'istio-system' namespace.
+This will isntall the default Istio profile consisting of 'istiod' and the 'istio-ingressgateway' in the 'istio-system' namespace.
 
 Example:
 ```
@@ -23,7 +23,7 @@ Perform a rollout restart to inject the enoy sidecar proxy and deploy the requir
 ```
 kubectl rollout restart deployment -n bookinfo
 kubectl apply -f ./microservices-demo/release -n online-boutique
-kubectl apply -f istio-1.9.5/samples/bookinfo/networking/bookinfo-gateway.yaml -n bookinfo
+kubectl apply -f istio-${ISTIO_VERSION}/samples/bookinfo/networking/bookinfo-gateway.yaml -n bookinfo
 kubectl rollout restart deployment -n online-boutique
 ```
 You will see that each pod will now have 2 containers. 

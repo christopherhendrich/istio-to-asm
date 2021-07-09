@@ -6,7 +6,7 @@ metadata:
 spec:  
   selector:
     matchLabels:
-      gateway: istio-igw-external
+      gateway: ingress-gateway
   template:
     metadata:
       annotations:
@@ -15,7 +15,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true" #due to known issue?      
       labels:
         # Set a unique label for the gateway. This is required to ensure Gateways can select this workload
-        gateway: istio-igw-external
+        gateway: ingress-gateway
         # Enable gateway injection. If connecting to a revisioned control plane, replace with "istio.io/rev: revision-name"
         sidecar.istio.io/inject: "true"  
         istio.io/rev: default
@@ -73,7 +73,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: istio-igw-external-sds
-  namespace: istio-ingress
+  namespace: istio-system
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
@@ -83,7 +83,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: istio-igw-external-sds
-  namespace: istio-ingress
+  namespace: istio-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
