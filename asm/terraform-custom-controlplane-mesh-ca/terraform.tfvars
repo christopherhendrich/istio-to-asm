@@ -1,5 +1,5 @@
  project_id            = "sada-chendrich-istio-to-asm"
- cluster_name          = "cluster-1"
+ cluster_name          = "cluster-2"
  location              = "us-central1-c"
  cluster_endpoint      = "34.123.126.109"
  asm_version           = "1.10"

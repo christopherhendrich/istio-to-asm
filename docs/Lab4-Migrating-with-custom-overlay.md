@@ -23,13 +23,22 @@ Deploy the Istio controlplane. We are using a custom configuration of the contro
 kubectl create ns istio-system
 kubectl apply -f istio/controlplane/custom-controlplane.yaml
 ```
+### Set up the central gateway resource
+We will be using a central gateway resource that all application virtual services will point to. 
+```
+kubectl apply -f istio/gateways-and-virtualservices/gateway-object.yaml
+```
+### Configure the VirtualServices for your worklods to use the central-gateway
+```
+kubectl apply -f iistio/gateways-and-virtualservices/bookinfo-vs.yaml
+kubectl apply -f iistio/gateways-and-virtualservices/online-boutique-vs.yaml
+```
+
 
 ### Inject the istio sidecar proxy into the applications
 Perform a rollout restart to inject the enoy sidecar proxy
 ```
 kubectl rollout restart deployment -n bookinfo
-kubectl apply -f ./microservices-demo/release -n online-boutique
-kubectl apply -f istio-${ISTIO_VERSION}/samples/bookinfo/networking/bookinfo-gateway.yaml -n bookinfo
 kubectl rollout restart deployment -n online-boutique
 ```
 You will see that each pod will now have 2 containers. 
@@ -142,71 +151,83 @@ kubectl apply -f asm/ingress-gateway/citadel
 kubectl get services -n asm-ingress asm-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ```
 
-If you try to access the applications via the asm-ingressgateway IP, you will find that they are not avilable, as the applications still run on the Istio service mesh. 
+If you try to access the applications via the asm-ingressgateway IP, you will find that they are not available, as the applications still run on the Istio service mesh. 
 
 
-### Move the Bookinfo app over to ASM 
-We migrate the bookinfo namespace to the ASM service mesh 
+### Move the app that will be used as canary over to ASM 
+For our example here,the bookinfo app will be our canary. 
+
 ```
 kubectl label namespace bookinfo istio.io/rev=asm-1102-2-citadel istio-injection- --overwrite
 kubectl rollout restart deployment -n bookinfo
 ```
-Create a gateway object for the Bookinfo app, that points to the new ASM ingress gateway.
+Create the gateway object in the asm-ingress namespace,that points to the new ASM ingress gateway.
 ```
-kubectl apply -f asm/bookinfo/bookinfo-gw-asm.yaml
-```
-
-Then we edit the VirtualService for the bookinfo app to point to the new gateway that we created
-```
-kubectl edit virtualservice bookinfo -n bookinfo 
-```
-Go into edit mode
-```
-i
-```
-replace
-```
-spec:
-  gateways:
-  - bookinfo-gateway
+kubectl apply -f asm/ingress-gateway/gateway-resource.yaml 
 ```
 
-with 
-```
-spec:
-  gateways:
-  - bookinfo-gateway-asm
-```
-Save and exit
-Hit ESC and then 
-``` 
-:wq
-```
-Output: 
-```
-virtualservice.networking.istio.io/bookinfo edited
-```
-
-Your application is no longer accessible via the old Istio Ingress Gateway IP...
+At this point the bookinfo App is still reachable via the Istio Ingress Gateway 
 ```
 curl -I http://$(kubectl get services -n istio-system istio-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/productpage
 ```
-Response
+
+Deploy a second virtual service for the Bookinfo app with a unique name that points to the new central-gateway gateway resource in the asm-ingress namespace.
+We are deploying this second virtual gateway to ensure we have no downtime for the application while we are testing it with the ASM service mesh and Ingress Gateway. 
+
 ```
-HTTP/1.1 404 Not Found
+kubectl apply -f asm/ingress-gateway/bookinfo-vs-asm-citadel.yaml 
 ```
 
-...but with the ASM Ingress Gateway IP
+The Bookinfo application is now accessible via both Ingress Gateway IPs, while Online Boutique is still only connected to the Istio mesh and Ingress Gateway. 
 ```
-curl -I http://$(kubectl get services -n asm-ingress asm-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/productpage
+./check-my-apps.sh 
 ```
-Response
+
+Output
 ```
+Online Boutique via Istio Ingress Gateway
+
 HTTP/1.1 200 OK
+set-cookie: shop_session-id=791c5fef-9bf5-483e-b714-0d7753c5ecde; Max-Age=172800
+date: Wed, 14 Jul 2021 20:03:36 GMT
+content-type: text/html; charset=utf-8
+x-envoy-upstream-service-time: 44
+server: istio-envoy
+transfer-encoding: chunked
+
+
+
+Bookinfo via Istio Ingress Gateway
+
+HTTP/1.1 200 OK
+content-type: text/html; charset=utf-8
+content-length: 5179
+server: istio-envoy
+date: Wed, 14 Jul 2021 20:03:37 GMT
+x-envoy-upstream-service-time: 46
+
+
+
+Online Boutique via ASM Ingress Gateway
+
+HTTP/1.1 404 Not Found
+date: Wed, 14 Jul 2021 20:03:38 GMT
+server: istio-envoy
+transfer-encoding: chunked
+
+
+
+Bookinfo via ASM Ingress Gateway
+
+HTTP/1.1 200 OK
+content-type: text/html; charset=utf-8
+content-length: 4183
+server: istio-envoy
+date: Wed, 14 Jul 2021 20:03:38 GMT
+x-envoy-upstream-service-time: 29
+
 ```
 
-Note: 
-If you want to switch back to using the Istio Ingress Gateway IP, simply edit the application's virtual service and revert the Spec.Gateways from "bookinfo-gateway-asm" back to "bookinfo-gateway".
 
 ### Migrate the remaining applications to ASM
 In our case this means migrating the Online Botique app. 
@@ -215,61 +236,19 @@ First we migrate the app to the ASM Service Mesh.
 kubectl label namespace online-boutique istio.io/rev=asm-1102-2-citadel istio-injection- --overwrite
 kubectl rollout restart deployment -n online-boutique
 ```
-The applciation is still available via the Istio Ingress Gateway. 
-```
-curl -I http://$(kubectl get services -n istio-system istio-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')
-```
-Response
-```
-HTTP/1.1 200 OK
-```
 
-Create the new gateway object for the Online Boutique app. 
-```
-kubectl apply -f asm/online-boutique/online-boutique-gw-asm.yaml -n online-boutique
-```
 
-Edit the VirtualService for the Online Boutique app to point to the new gateway that we created
+Create the new new virtual service object for the Online Boutique app. 
 ```
-kubectl edit virtualservice frontend-ingress -n online-boutique 
+kubectl apply -f asm/ingress-gateway/online-boutique-vs.yaml 
 ```
-Go into edit mode
+Both of the applications are now accessible via both Ingress Gateways
 ```
-i
-```
-replace
-```
-spec:
-  gateways:
-  - frontend-gateway
-```
-
-with 
-```
-spec:
-  gateways:
-  - frontend-gateway-asm
-```
-Save and exit
-Hit ESC and then 
-``` 
-:wq
-```
-Output: 
-```
-virtualservice.networking.istio.io/frontend-ingress edited
-```
-
-Your application is no longer accessible via the old Istio Ingress Gateway IP...
-```
-curl -I http://$(kubectl get services -n istio-system istio-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/
-```
-...but with the ASM Ingress Gateway IP
-```
-curl -I http://$(kubectl get services -n asm-ingress asm-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/
+./check-my-apps.sh
 ```
 
 You can also test via your browser. 
+
 
 ### Confirm that both CA certificates are now present in your pods
 Install the Mesh-CA validation script. This script will validate that the sidecar is configured with both, the old Citadel, as well as the new Mesh-CA certificate. This will ensure that your applications that you migrate to Mesh-CA are still able to talk to workloads still running with Citadel. 
@@ -328,10 +307,13 @@ Namespace: online-boutique
  - shippingservice-85d9c89794-tpnvz.online-boutique trusts [CITADEL MESHCA]
  ```
  
+ ### Cutover to the new Ingress Gateway
+ At this point, once your applications are testing using the new Ingress Gateway, point DNS/AppFirewall/LoadBalancer or whatever you have sitting in front of your Istio Ingress Gateway, to the new ASM Ingress Gateway IP. 
+ 
+ 
+ 
 ### Finalize the migration
-At this time, all of your workloads are migrated from Istio to ASM and we moved to a new Ingress Gateway located in its own namespace as recommended by Istio and Google. 
-At this point, you might have to change incoming traffic over to the new ingress gateway. For example updating DNS entry or pointing your Application Firewall to the new Ingress Gateway IP. 
-This should close out the downtime. 
+At this time, all of your workloads are migrated from Istio to ASM and we moved to a new Ingress Gateway and Gateway resource, located in their own namespace, as recommended by Istio and Google. 
 We still are using Citadel at this time. Before we move on to migrating from Citadel to Mesh we will remove the old Istio environment. 
 
 
@@ -353,18 +335,17 @@ Delete the old version of istiod
 ```
 kubectl delete Service,Deployment,HorizontalPodAutoscaler,PodDisruptionBudget istiod -n istio-system --ignore-not-found=true
 ```
-Remove the old version of the IstioOperator configuration
-
-```
-kubectl delete IstioOperator istio-controlplane -n istio-system
-```
-
 Delete the IstioOperator and IstioOperator namespace
 ```
 istioctl operator remove
 kubectl delete ns istio-operator
 ```
 
+Remove the old version of the IstioOperator configuration
+
+```
+kubectl delete IstioOperator istio-controlplane -n istio-system
+```
 
 You will now only find your ASM Istiod in the istio-system namespace. 
 ```
@@ -458,29 +439,115 @@ kubectl label namespace bookinfo istio.io/rev=asm-1102-2-meshca --overwrite
 kubectl rollout restart deployment -n bookinfo
 ```
 
-Confirm that both application are still working (HTTP/1.1 200 OK). 
-Bookinfo using the mesh-ca ASM controlplane
+Confirm that both application are still working (HTTP/1.1 200 OK) via the ASM Ingress Gateway. 
 ```
-curl -I http://$(kubectl get services -n asm-ingress asm-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/productpage
+./check-my-apps.sh
+```
+Expected example output 
+```
+Online Boutique via Istio Ingress Gateway
+curl: (7) Failed to connect to 34.122.113.144 port 80: Connection refused
+
+Bookinfo via Istio Ingress Gateway
+curl: (7) Failed to connect to 34.122.113.144 port 80: Connection refused
+
+Online Boutique via ASM Ingress Gateway
+HTTP/1.1 200 OK
+set-cookie: shop_session-id=cccf66d8-ed9a-43e4-8da1-71fc1fed935a; Max-Age=172800
+date: Wed, 14 Jul 2021 20:36:52 GMT
+content-type: text/html; charset=utf-8
+x-envoy-upstream-service-time: 46
+server: istio-envoy
+transfer-encoding: chunked
+
+
+Bookinfo via ASM Ingress Gateway
+HTTP/1.1 200 OK
+content-type: text/html; charset=utf-8
+content-length: 5183
+server: istio-envoy
+date: Wed, 14 Jul 2021 20:36:55 GMT
+x-envoy-upstream-service-time: 1489
 ```
 
-Online boutique is still running on the Citadel ASM controlplane
-```
-curl -I http://$(kubectl get services -n asm-ingress asm-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/
-```
-
-### Migrate the rst of your applications to the new ASM Mesh CA controlplane
+### Migrate the rest of your applications to the new ASM Mesh CA controlplane
 In our case this will only involve the Online-Boutqiue app. 
 ```
-kubectl label namespace online-boutqiue istio.io/rev=asm-1102-2-meshca --overwrite
+kubectl label namespace online-boutique istio.io/rev=asm-1102-2-meshca --overwrite
 kubectl rollout restart deployment -n online-boutique
 ```
 
+### Confirm one more time that your applciations are migrated and accessible
+Confirm that the Mesh CA revision label is present on your workloads
+Bookinfo
+```
+kubectl get pod -n bookinfo -L istio.io/rev
+```
+Example output
+```
+NAME                              READY   STATUS    RESTARTS   AGE    REV
+details-v1-5c8c468f5d-tw5zr       2/2     Running   0          3m1s   asm-1102-2-meshca
+productpage-v1-85d8495dc4-lwrhr   2/2     Running   0          3m1s   asm-1102-2-meshca
+ratings-v1-79dc79d95d-8vf62       2/2     Running   0          3m1s   asm-1102-2-meshca
+reviews-v1-57cf5fd96b-zhjvm       2/2     Running   0          3m1s   asm-1102-2-meshca
+reviews-v2-77cfdf74b-pcv8v        2/2     Running   0          3m1s   asm-1102-2-meshca
+reviews-v3-77b9874858-6vkjd       2/2     Running   0          3m1s   asm-1102-2-meshca
+```
+Online Boutique
+```
+kubectl get pod -n online-boutique -L istio.io/rev
+```
+Example output
+```
+NAME                                     READY   STATUS    RESTARTS   AGE     REV
+adservice-57949ff959-qwklm               2/2     Running   0          6m42s   asm-1102-2-meshca
+cartservice-85674b67bb-wh9ds             2/2     Running   0          6m42s   asm-1102-2-meshca
+checkoutservice-6cf77999c7-vxvkt         2/2     Running   0          6m42s   asm-1102-2-meshca
+currencyservice-79c99596f7-57vgx         2/2     Running   0          6m41s   asm-1102-2-meshca
+emailservice-8b44f99d5-5rs79             2/2     Running   0          6m41s   asm-1102-2-meshca
+frontend-7d59b68b9d-g6g6m                2/2     Running   0          6m39s   asm-1102-2-meshca
+loadgenerator-55b4cbd49d-pg5hj           2/2     Running   0          6m41s   asm-1102-2-meshca
+paymentservice-7b6bb96945-q9jcq          2/2     Running   0          6m38s   asm-1102-2-meshca
+productcatalogservice-7694b54797-tnwlw   2/2     Running   0          6m39s   asm-1102-2-meshca
+recommendationservice-7f5d9497f7-x44ch   2/2     Running   0          6m39s   asm-1102-2-meshca
+redis-cart-84c59cb95f-db8jw              2/2     Running   0          6m40s   asm-1102-2-meshca
+shippingservice-b74586c65-p44hl          2/2     Running   0          6m40s   asm-1102-2-meshca
+```
+
+Confirm that your apps are still reachable via the ASM Ingress Gateway
+```
+./check-my-apps.sh 
+```
+Example output
+```
+Online Boutique via Istio Ingress Gateway
+curl: (7) Failed to connect to 34.122.113.144 port 80: Connection refused
+
+Bookinfo via Istio Ingress Gateway
+curl: (7) Failed to connect to 34.122.113.144 port 80: Connection refused
+
+Online Boutique via ASM Ingress Gateway
+HTTP/1.1 200 OK
+set-cookie: shop_session-id=110d0be9-436e-4b26-9879-50d91780aa2a; Max-Age=172800
+date: Wed, 14 Jul 2021 20:49:18 GMT
+content-type: text/html; charset=utf-8
+x-envoy-upstream-service-time: 53
+server: istio-envoy
+transfer-encoding: chunked
+
+Bookinfo via ASM Ingress Gateway
+HTTP/1.1 200 OK
+content-type: text/html; charset=utf-8
+content-length: 5179
+server: istio-envoy
+date: Wed, 14 Jul 2021 20:49:19 GMT
+x-envoy-upstream-service-time: 68
+```
+
+
+
 ### Clean up the Citadel ASM controlplane
-Configure the validating webhook to use the new control plane.
-```
-kubectl apply -f outdir-meshca/asm/istio/istiod-service.yaml 
-```
+
 Delete the old istio-ingressgatewayDeployment. 
 ```
 kubectl delete deploy asm-ingressgateway -n asm-ingress --ignore-not-found=true
@@ -511,6 +578,7 @@ kubectl delete secret cacerts istio-ca-secret -n istio-system --ignore-not-found
 Restart the newly installed control plane. This makes sure the old root of trust is cleaned up from all workloads running in the mesh.
 ```
 kubectl rollout restart deployment -n istio-system
+kubectl label namespace asm-ingress istio.io/rev=asm-1102-2-meshca --overwrite
 kubectl rollout restart deployment -n asm-ingress
 ```
 
@@ -531,13 +599,79 @@ Open your Bookinfo application in your browser
 http://[public_ip]/productpage
 ```
 *Or using curl*
-Online Boutique
 ```
-curl -I http://$(kubectl get services -n asm-ingress asm-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/
+./check-my-apps.sh 
 ```
-Bookinfo
-curl -I http://$(kubectl get services -n asm-ingress asm-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/productpage
+Example output
 ```
+Online Boutique via Istio Ingress Gateway
+curl: (7) Failed to connect to 34.122.113.144 port 80: Connection refused
+
+Bookinfo via Istio Ingress Gateway
+curl: (7) Failed to connect to 34.122.113.144 port 80: Connection refused
+
+Online Boutique via ASM Ingress Gateway
+HTTP/1.1 200 OK
+set-cookie: shop_session-id=110d0be9-436e-4b26-9879-50d91780aa2a; Max-Age=172800
+date: Wed, 14 Jul 2021 20:49:18 GMT
+content-type: text/html; charset=utf-8
+x-envoy-upstream-service-time: 53
+server: istio-envoy
+transfer-encoding: chunked
+
+Bookinfo via ASM Ingress Gateway
+HTTP/1.1 200 OK
+content-type: text/html; charset=utf-8
+content-length: 5179
+server: istio-envoy
+date: Wed, 14 Jul 2021 20:49:19 GMT
+x-envoy-upstream-service-time: 68
+```
+
+
+
+Validate that the sidecar proxies for the workloads on the cluster are configured with only the new root certificate for Mesh CA:
+```
+./migrate_ca check-root-cert
+```
+Example output
+```
+Checking the root certificates loaded on each pod...
+
+Namespace: asm-ingress
+ - asm-ingressgateway-meshca-7bdf4b497b-cshzs.asm-ingress trusts [MESHCA]
+ - asm-ingressgateway-meshca-7bdf4b497b-j7qbb.asm-ingress trusts [MESHCA]
+ - asm-ingressgateway-meshca-7bdf4b497b-phg8s.asm-ingress trusts [MESHCA]
+
+Namespace: asm-system
+
+Namespace: bookinfo
+ - details-v1-5c8c468f5d-tw5zr.bookinfo trusts [MESHCA]
+ - productpage-v1-85d8495dc4-lwrhr.bookinfo trusts [MESHCA]
+ - ratings-v1-79dc79d95d-8vf62.bookinfo trusts [MESHCA]
+ - reviews-v1-57cf5fd96b-zhjvm.bookinfo trusts [MESHCA]
+ - reviews-v2-77cfdf74b-pcv8v.bookinfo trusts [MESHCA]
+ - reviews-v3-77b9874858-6vkjd.bookinfo trusts [MESHCA]
+
+Namespace: default
+
+Namespace: istio-system
+
+Namespace: online-boutique
+ - adservice-57949ff959-qwklm.online-boutique trusts [MESHCA]
+ - cartservice-85674b67bb-wh9ds.online-boutique trusts [MESHCA]
+ - checkoutservice-6cf77999c7-vxvkt.online-boutique trusts [MESHCA]
+ - currencyservice-79c99596f7-57vgx.online-boutique trusts [MESHCA]
+ - emailservice-8b44f99d5-5rs79.online-boutique trusts [MESHCA]
+ - frontend-7d59b68b9d-g6g6m.online-boutique trusts [MESHCA]
+ - loadgenerator-55b4cbd49d-pg5hj.online-boutique trusts [MESHCA]
+ - paymentservice-7b6bb96945-q9jcq.online-boutique trusts [MESHCA]
+ - productcatalogservice-7694b54797-tnwlw.online-boutique trusts [MESHCA]
+ - recommendationservice-7f5d9497f7-x44ch.online-boutique trusts [MESHCA]
+ - redis-cart-84c59cb95f-db8jw.online-boutique trusts [MESHCA]
+ - shippingservice-b74586c65-p44hl.online-boutique trusts [MESHCA]
+ ```
+
 
 
 ### Congratulations! Your migration from Istio to ASM and from Citadel to Mesh CA is complete!

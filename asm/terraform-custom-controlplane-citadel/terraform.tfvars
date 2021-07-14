@@ -1,7 +1,7 @@
  project_id            = "sada-chendrich-istio-to-asm"
- cluster_name          = "cluster-1"
+ cluster_name          = "cluster-2"
  location              = "us-central1-c"
- cluster_endpoint      = "34.69.169.112"
+ cluster_endpoint      = "35.224.245.241"
  asm_version           = "1.10"
  ca                    = "citadel"
  #ca_certs              = { "ca_cert" = "ca-cert.pem", "ca_key" = "ca_key_1", "root_cert" = "root_cert1"}

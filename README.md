@@ -80,7 +80,7 @@ We will install a second application to understand the behaviour of the migratio
 kubectl create ns online-boutique
 kubectl label namespace online-boutique istio-injection=enabled
 git clone https://github.com/GoogleCloudPlatform/microservices-demo.git
-kubectl apply -f ./microservices-demo/release -n online-boutique
+kubectl apply -f ./microservices-demo/release/kubernetes-manifests.yaml -n online-boutique
 ```
 
 ## Labs
