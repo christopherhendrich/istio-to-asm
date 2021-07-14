@@ -9,4 +9,4 @@ CLUSTER_NAME=cluster-1 # default name
 
 gcloud config set project ${PROJECT_ID}
 gcloud config set compute/region ${REGION}
-gcloud config set compute/zone ${ZONE}ls
+gcloud config set compute/zone ${ZONE}

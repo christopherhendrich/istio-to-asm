@@ -1,7 +1,7 @@
 data "google_client_config" "default" {}
 
 module "asm" {
-  source                = "terraform-google-modules/kubernetes-engine/google//modules/asm"
+  source                = "github.com/christopherhendrich/terraform-google-kubernetes-engine//modules/asm"
   project_id            = var.project_id
   cluster_name          = var.cluster_name
   location              = var.location 
@@ -14,7 +14,8 @@ module "asm" {
   options               = var.options
   custom_overlays       = var.custom_overlays
   skip_validation       = var.skip_validation
+  revision_label        = var.revision_label
   outdir                = var.outdir
-#   iam_member            = var.iam_member
   mode                  = var.mode
+
 }

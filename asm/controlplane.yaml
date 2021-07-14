@@ -6,8 +6,7 @@ metadata:
 spec:
   components:
     ingressGateways:
-    - enabled: false
-    
+    - enabled: false   
       name: istio-ingressgateway
     pilot:
       k8s:

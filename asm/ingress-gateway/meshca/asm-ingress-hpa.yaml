@@ -1,12 +1,12 @@
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: istio-ingressgateway-hpa
-  namespace: istio-system
+  name: asm-ingressgateway-meshca-hpa
+  namespace: asm-ingress
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: istio-ingressgateway
+    name: asm-ingressgateway-meshca #
   minReplicas: 3
   maxReplicas: 10

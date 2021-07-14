@@ -1,27 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: igw-external-asm
+  name: asm-ingressgateway-meshca
   namespace: asm-ingress
 spec:  
   selector:
     matchLabels:
-      gateway: igw-external-asm
+      asm: ingressgateway
   template:
     metadata:
       annotations:
         # Select the gateway injection template (rather than the default sidecar template)
         inject.istio.io/templates: gateway
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        apm.datadoghq.com/env: '{ "DD_ENV": "prod", "DD_TRACE_ANALYTICS_ENABLED": "true" }'
+
       labels:
         # Set a unique label for the gateway. This is required to ensure Gateways can select this workload
-        gateway: igw-external-asm
+        asm: ingressgateway
         # Enable gateway injection. If connecting to a revisioned control plane, replace with "istio.io/rev: revision-name"
         sidecar.istio.io/inject: "true"
         #istio.io/rev: default       
-        istio.io/rev: asm-195-2 
+        istio.io/rev: asm-1102-2-meshca
+        service.istio.io/canonical-revision: asm-1102-2-meshca # Iad to add this label to not break the app access during migration to mesh ca
     spec:
+      nodeSelector: 
+          istio-nodepool: "true"
       affinity: 
         podAntiAffinity:
               preferredDuringSchedulingIgnoredDuringExecution:
@@ -29,10 +32,10 @@ spec:
                 podAffinityTerm:
                   labelSelector:
                     matchExpressions:
-                    - key: gateway
+                    - key: asm
                       operator: In
                       values:
-                      - igw-external-asm
+                      - ingressgateway
                   topologyKey: failure-domain.beta.kubernetes.io/zone
               requiredDuringSchedulingIgnoredDuringExecution:
               - labelSelector:
@@ -66,7 +69,7 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: igw-external-asm-sds
+  name: asm-ingressgateway-meshca-sds
   namespace: asm-ingress
 rules:
 - apiGroups: [""]
@@ -76,12 +79,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: igw-external-asm-sds
+  name: asm-ingressgateway-meshca-sds
   namespace: asm-ingress
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: igw-external-asm-sds
+  name: asm-ingressgateway-meshca-sds
 subjects:
 - kind: ServiceAccount
   name: default

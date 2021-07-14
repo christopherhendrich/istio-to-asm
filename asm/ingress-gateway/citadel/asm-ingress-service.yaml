@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: asm-ingressgateway
+  namespace: asm-ingress
+spec:
+  type: LoadBalancer
+  selector:
+    asm: ingressgateway
+  ports:
+  - port: 80
+    name: http2
+    targetPort: 8080
+  - port: 443
+    name: https
