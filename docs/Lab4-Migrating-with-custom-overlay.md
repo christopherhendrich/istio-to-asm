@@ -30,8 +30,8 @@ kubectl apply -f istio/gateways-and-virtualservices/gateway-object.yaml
 ```
 ### Configure the VirtualServices for your worklods to use the central-gateway
 ```
-kubectl apply -f iistio/gateways-and-virtualservices/bookinfo-vs.yaml
-kubectl apply -f iistio/gateways-and-virtualservices/online-boutique-vs.yaml
+kubectl apply -f istio/gateways-and-virtualservices/bookinfo-vs.yaml
+kubectl apply -f istio/gateways-and-virtualservices/online-boutique-vs.yaml
 ```
 
 
