@@ -1,5 +1,5 @@
  project_id            = "sada-chendrich-istio-to-asm"
- cluster_name          = "cluster-2"
+ cluster_name          = "cluster-1"
  location              = "us-central1-c"
  cluster_endpoint      = "34.123.126.109"
  asm_version           = "1.10"
@@ -17,6 +17,6 @@
  options               = ["envoy-access-log,ca-migration-meshca"]
  custom_overlays       = ["../controlplane.yaml"]
  skip_validation       = true
- revision_label        = "asm-1102-2-meshca"
+ revision_name        = "asm-1102-2-meshca"
  outdir                = "./outdir"
  iam_member            = "christopher.hendrich@sada.com"
