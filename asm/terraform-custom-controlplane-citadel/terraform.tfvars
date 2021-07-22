@@ -17,6 +17,6 @@
  options               = ["envoy-access-log,ca-migration-citadel"]
  custom_overlays       = ["../controlplane.yaml"]
  skip_validation       = true
- revision_label        = "asm-1102-2-citadel"
+ revision_name         = "asm-1102-2-citadel"
  outdir                = "./outdir"
  iam_member            = "christopher.hendrich@sada.com"
