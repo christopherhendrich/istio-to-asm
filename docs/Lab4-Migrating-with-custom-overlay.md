@@ -171,11 +171,10 @@ At this point the bookinfo App is still reachable via the Istio Ingress Gateway
 curl -I http://$(kubectl get services -n istio-system istio-ingressgateway --output jsonpath='{.status.loadBalancer.ingress[0].ip}')/productpage
 ```
 
-Deploy a second virtual service for the Bookinfo app with a unique name that points to the new central-gateway gateway resource in the asm-ingress namespace.
-We are deploying this second virtual gateway to ensure we have no downtime for the application while we are testing it with the ASM service mesh and Ingress Gateway. 
+Add the ASM central-gateway to the Bookinfo Virtual Service. 
 
 ```
-kubectl apply -f asm/ingress-gateway/bookinfo-vs-asm-citadel.yaml 
+kubectl apply -f asm/ingress-gateway/bookinfo-vs-istio-and-asm.yaml 
 ```
 
 The Bookinfo application is now accessible via both Ingress Gateway IPs, while Online Boutique is still only connected to the Istio mesh and Ingress Gateway. 
@@ -238,7 +237,7 @@ kubectl rollout restart deployment -n online-boutique
 ```
 
 
-Create the new new virtual service object for the Online Boutique app. 
+Update the virtual service object for the Online Boutique app. 
 ```
 kubectl apply -f asm/ingress-gateway/online-boutique-vs.yaml 
 ```
