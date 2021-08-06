@@ -174,7 +174,7 @@ curl -I http://$(kubectl get services -n istio-system istio-ingressgateway --out
 Add the ASM central-gateway to the Bookinfo Virtual Service. 
 
 ```
-kubectl apply -f asm/ingress-gateway/bookinfo-vs-asm-citadel.yaml
+kubectl apply -f asm/ingress-gateway/bookinfo-vs-istio-and-asm.yaml
 ```
 
 The Bookinfo application is now accessible via both Ingress Gateway IPs, while Online Boutique is still only connected to the Istio mesh and Ingress Gateway. 
