@@ -547,6 +547,21 @@ x-envoy-upstream-service-time: 68
 
 ### Clean up the Citadel ASM controlplane
 
+Configure the validating webhook to use the new control plane.
+Option 1 - Terraform:
+```
+kubectl apply -f asm/terraform-custom-controlplane-mesh-ca/outdir/asm/istio/istiod-service.yaml
+```
+Option 2 - install_asm:
+```
+kubectl apply -f outdir-meshca/asm/istio/istiod-service.yaml
+```
+Output
+```
+service/istiod configured
+```
+
+
 Delete the old istio-ingressgatewayDeployment. 
 ```
 kubectl delete deploy asm-ingressgateway -n asm-ingress --ignore-not-found=true
