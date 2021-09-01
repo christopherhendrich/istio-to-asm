@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: asm-ingressgateway-meshca
+  name: asm-ingressgateway
   namespace: asm-ingress
 spec:  
   selector:
@@ -18,10 +18,9 @@ spec:
         # Set a unique label for the gateway. This is required to ensure Gateways can select this workload
         asm: ingressgateway
         # Enable gateway injection. If connecting to a revisioned control plane, replace with "istio.io/rev: revision-name"
-        sidecar.istio.io/inject: "true"
-        #istio.io/rev: default       
-        istio.io/rev: asm-1102-2-meshca
-        service.istio.io/canonical-revision: asm-1102-2-meshca # Iad to add this label to not break the app access during migration to mesh ca
+        sidecar.istio.io/inject: "true"    
+        istio.io/rev: asm-1102-3
+        service.istio.io/canonical-revision: asm-1102-3 # Had to add this label to not break the app access during migration to mesh ca
     spec:
       nodeSelector: 
           istio-nodepool: "true"
@@ -69,7 +68,7 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: asm-ingressgateway-meshca-sds
+  name: asm-ingressgateway-sds
   namespace: asm-ingress
 rules:
 - apiGroups: [""]
@@ -79,12 +78,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: asm-ingressgateway-meshca-sds
+  name: asm-ingressgateway-sds
   namespace: asm-ingress
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: asm-ingressgateway-meshca-sds
+  name: asm-ingressgateway-sds
 subjects:
 - kind: ServiceAccount
   name: default

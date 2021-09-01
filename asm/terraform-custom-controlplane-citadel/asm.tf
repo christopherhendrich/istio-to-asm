@@ -14,7 +14,7 @@ module "asm" {
   options               = var.options
   custom_overlays       = var.custom_overlays
   skip_validation       = var.skip_validation
-  revision_name         = var.revision_name
+  revision_name        = var.revision_name
   outdir                = var.outdir
   mode                  = var.mode
 

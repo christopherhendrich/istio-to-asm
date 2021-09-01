@@ -1,25 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: istio-ingressgateway
-  namespace: istio-system
+  name: asm-ingressgateway
+  namespace: asm-ingress
 spec:  
   selector:
     matchLabels:
-      istio: ingressgateway
+      asm: ingressgateway
   template:
     metadata:
       annotations:
         # Select the gateway injection template (rather than the default sidecar template)
         inject.istio.io/templates: gateway
-        cluster-autoscaler.kubernetes.io/safe-to-evict: "true" #due to known issue?      
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+
       labels:
         # Set a unique label for the gateway. This is required to ensure Gateways can select this workload
-        istio: ingressgateway
+        asm: ingressgateway
         # Enable gateway injection. If connecting to a revisioned control plane, replace with "istio.io/rev: revision-name"
-        sidecar.istio.io/inject: "true"
-        istio.io/rev: default
+        sidecar.istio.io/inject: "true"    
+        istio.io/rev: asm
+        service.istio.io/canonical-revision: asm # Had to add this label to not break the app access during migration to mesh ca
     spec:
+      nodeSelector: 
+          istio-nodepool: "true"
       affinity: 
         podAntiAffinity:
               preferredDuringSchedulingIgnoredDuringExecution:
@@ -27,7 +31,7 @@ spec:
                 podAffinityTerm:
                   labelSelector:
                     matchExpressions:
-                    - key: istio
+                    - key: asm
                       operator: In
                       values:
                       - ingressgateway
@@ -50,30 +54,22 @@ spec:
           limits:
             cpu: "4"
             memory: 1Gi 
-        readinessProbe:
-          failureThreshold: 30
-          httpGet:
-            path: /healthz/ready
-            port: 15021
-          initialDelaySeconds: 1
-          periodSeconds: 2
-          timeoutSeconds: 3
-      nodeSelector: 
-          istio-nodepool: "true"
       tolerations:
       - effect: NoSchedule
         key: istio
         operator: Equal
         value: "true"
-      
-     
-        
+        # readinessProbe:
+        #     initialDelaySeconds: 10
+        #     successThreshold: 3
+        #     tcpSocket:
+        #       port: 15021
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: istio-ingressgateway-sds
-  namespace: istio-system
+  name: asm-ingressgateway-sds
+  namespace: asm-ingress
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
@@ -82,12 +78,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: istio-ingressgateway-sds
-  namespace: istio-system
+  name: asm-ingressgateway-sds
+  namespace: asm-ingress
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: istio-ingressgateway-sds
+  name: asm-ingressgateway-sds
 subjects:
 - kind: ServiceAccount
   name: default

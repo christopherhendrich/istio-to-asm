@@ -1,12 +1,12 @@
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: asm-ingressgateway-hpa
+  name: asm-ingressgateway-hpa-temp
   namespace: asm-ingress
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: asm-ingressgateway
+    name: asm-ingressgateway-temp
   minReplicas: 3
   maxReplicas: 10

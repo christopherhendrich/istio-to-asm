@@ -117,7 +117,7 @@ cd ../..
   --ca citadel \
   --enable_all \
   --option ca-migration-citadel \
-  --revision_name asm-1102-2-citadel  \
+  --revision_name ${REV_LABEL}-citadel  \
   --output_dir outdir/ \
   --custom_overlay $PWD/asm/controlplane.yaml
 ```
@@ -139,10 +139,16 @@ istiod-asm-1102-2-citadel-55f6fb4fc6-txzpz   1/1     Running   0          33s   
 ```
 You can see that we now have a ASM control plane, consisting of 2 pods. 
 
+
+### Update the revision label for the ingress gateway deployments
+```
+sed -i "s/asm-1102-2-citadel/${REV_LABEL}-citadel/" asm/ingress-gateway/citadel/asm-ingress-deployment.yaml
+```
+
 ### Create the new gateway that will reside in its own namespace
 ```
 kubectl create ns asm-ingress
-kubectl label namespace asm-ingress istio.io/rev=asm-1102-2-citadel istio-injection- --overwrite
+kubectl label namespace asm-ingress istio.io/rev=${REV_LABEL}-citadel istio-injection- --overwrite
 kubectl apply -f asm/ingress-gateway/citadel
 ```
 
@@ -158,7 +164,7 @@ If you try to access the applications via the asm-ingressgateway IP, you will fi
 For our example here,the bookinfo app will be our canary. 
 
 ```
-kubectl label namespace bookinfo istio.io/rev=asm-1102-2-citadel istio-injection- --overwrite
+kubectl label namespace bookinfo istio.io/rev=${REV_LABEL}-citadel istio-injection- --overwrite
 kubectl rollout restart deployment -n bookinfo
 ```
 Create the gateway object in the asm-ingress namespace,that points to the new ASM ingress gateway.
@@ -174,7 +180,7 @@ curl -I http://$(kubectl get services -n istio-system istio-ingressgateway --out
 Add the ASM central-gateway to the Bookinfo Virtual Service. 
 
 ```
-kubectl apply -f asm/ingress-gateway/bookinfo-vs-istio-and-asm.yaml
+kubectl apply -f asm/ingress-gateway/bookinfo-vs-asm.yaml
 ```
 
 The Bookinfo application is now accessible via both Ingress Gateway IPs, while Online Boutique is still only connected to the Istio mesh and Ingress Gateway. 
@@ -232,7 +238,7 @@ x-envoy-upstream-service-time: 29
 In our case this means migrating the Online Botique app. 
 First we migrate the app to the ASM Service Mesh. 
 ```
-kubectl label namespace online-boutique istio.io/rev=asm-1102-2-citadel istio-injection- --overwrite
+kubectl label namespace online-boutique istio.io/rev=${REV_LABEL}-citadel istio-injection- --overwrite
 kubectl rollout restart deployment -n online-boutique
 ```
 
@@ -317,9 +323,17 @@ We still are using Citadel at this time. Before we move on to migrating from Cit
 
 
 Configure the validating webhook to use the new control plane.
+
+When you used Option 1 (Terraform): 
 ```
 kubectl apply -f asm/terraform-custom-controlplane-citadel/outdir/asm/istio/istiod-service.yaml
 ```
+
+When you used Option 2 (install_asm)
+```
+kubectl apply -f outdir/asm/istio/istiod-service.yaml
+```
+
 Output
 ```
 service/istiod configured
@@ -363,7 +377,7 @@ kubectl get pod -n asm-ingress -L istio.io/rev
 ``` 
 Output
 ```
-AME                                  READY   STATUS    RESTARTS   AGE    REV
+NAME                                  READY   STATUS    RESTARTS   AGE    REV
 asm-ingressgateway-854fdbdf65-h6vkp   1/1     Running   0          161m   asm-1102-2-citadel
 asm-ingressgateway-854fdbdf65-mkf4q   1/1     Running   0          161m   asm-1102-2-citadel
 asm-ingressgateway-854fdbdf65-xf69c   1/1     Running   0          161m   asm-1102-2-citadel
@@ -399,7 +413,7 @@ Apply complete! Resources: 5 added, 0 changed, 0 destroyed.
   --ca mesh_ca \
   --enable_all \
   --option ca-migration-meshca \
-  --revision_name asm-1102-2-meshca  \
+  --revision_name asm-1102-3  \
   --output_dir outdir-meshca/ \
   --custom_overlay $PWD/asm/controlplane.yaml
 ```
@@ -418,6 +432,11 @@ istiod-asm-1102-2-meshca-5b685fd8f7-8xbzg    1/1     Running   0          27s   
 istiod-asm-1102-2-meshca-5b685fd8f7-jkc79    1/1     Running   0          27s   asm-1102-2-meshca
 ```
 
+### Update the revision label for the ingress gateway deployments
+```
+sed -i "s/asm-1102-2-meshca/${REV_LABEL}-meshca/" asm/ingress-gateway/meshca/asm-ingress-deployment.yaml
+```
+
 ### Deploy a new ASM Ingress Gateway deployment 
 We will keep using the Ingress Gateway service, but the deployment and hpa will be new deployments, so we can migrate our workloads with virtually zero downtime. 
 ```
@@ -434,7 +453,7 @@ Note: If the ingress gateway deployments do not have the *service.istio.io/canon
 
 ### Migrate the first application to the new ASM Mesh CA controlplane 
 ```
-kubectl label namespace bookinfo istio.io/rev=asm-1102-2-meshca --overwrite
+kubectl label namespace bookinfo istio.io/rev=${REV_LABEL}-meshca --overwrite
 kubectl rollout restart deployment -n bookinfo
 ```
 
@@ -472,7 +491,7 @@ x-envoy-upstream-service-time: 1489
 ### Migrate the rest of your applications to the new ASM Mesh CA controlplane
 In our case this will only involve the Online-Boutqiue app. 
 ```
-kubectl label namespace online-boutique istio.io/rev=asm-1102-2-meshca --overwrite
+kubectl label namespace online-boutique istio.io/rev=${REV_LABEL}-meshca --overwrite
 kubectl rollout restart deployment -n online-boutique
 ```
 
@@ -547,21 +566,6 @@ x-envoy-upstream-service-time: 68
 
 ### Clean up the Citadel ASM controlplane
 
-Configure the validating webhook to use the new control plane.
-Option 1 - Terraform:
-```
-kubectl apply -f asm/terraform-custom-controlplane-mesh-ca/outdir/asm/istio/istiod-service.yaml
-```
-Option 2 - install_asm:
-```
-kubectl apply -f outdir-meshca/asm/istio/istiod-service.yaml
-```
-Output
-```
-service/istiod configured
-```
-
-
 Delete the old istio-ingressgatewayDeployment. 
 ```
 kubectl delete deploy asm-ingressgateway -n asm-ingress --ignore-not-found=true
@@ -569,12 +573,12 @@ kubectl delete deploy asm-ingressgateway -n asm-ingress --ignore-not-found=true
 
 Delete the old istiod revision.
 ```
-kubectl delete Service,Deployment,HorizontalPodAutoscaler,PodDisruptionBudget istiod-asm-1102-2-citadel -n istio-system --ignore-not-found=true
+kubectl delete Service,Deployment,HorizontalPodAutoscaler,PodDisruptionBudget istiod-${REV_LABEL}-citadel -n istio-system --ignore-not-found=true
 ```
 
 Remove the old IstioOperator configuration.
 ```
-kubectl delete IstioOperator installed-state-istio-controlplane-asm-1102-2-citadel -n istio-system
+kubectl delete IstioOperator installed-state-istio-controlplane-${REV_LABEL}-citadel -n istio-system
 ```
 
 ## Clean up the CA certificates
@@ -592,7 +596,6 @@ kubectl delete secret cacerts istio-ca-secret -n istio-system --ignore-not-found
 Restart the newly installed control plane. This makes sure the old root of trust is cleaned up from all workloads running in the mesh.
 ```
 kubectl rollout restart deployment -n istio-system
-kubectl label namespace asm-ingress istio.io/rev=asm-1102-2-meshca --overwrite
 kubectl rollout restart deployment -n asm-ingress
 ```
 

@@ -29,6 +29,17 @@ ISTIO_VERSION=1.9.6
 ASM_VERSION=1.10 
 CLUSTER_NAME=cluster-1  # default name
 ```
+NOTE: If you want to use a specific version of ASM, other than the latest within the minor version, use: 
+```
+curl https://storage.googleapis.com/csm-artifacts/asm/STABLE_VERSIONS
+```
+to get a list of the stable versions. Output will be in the format similar to this:
+```
+1.10.2-asm.2+config1:install_asm_1.10.2-asm.2-config1
+```
+Use the part after the `:` as ASM_VERSION value. 
+
+
 ### Run the vars.sh script
 ```
 chmod +x ./vars.sh
@@ -39,12 +50,12 @@ source ./vars.sh
 
 *FOR LAB 1-2* Create the cluster - This will take several minutes
 ```
-gcloud beta container --project $PROJECT_ID clusters create "${CLUSTER_NAME}" --zone "$ZONE" --no-enable-basic-auth  --release-channel "regular" --machine-type "e2-standard-4" --image-type "COS_CONTAINERD" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/$PROJECT_ID/global/networks/default" --subnetwork "projects/$PROJECT_ID/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --workload-pool "${PROJECT_ID}.svc.id.goog" --enable-shielded-nodes --enable-autoscaling --min-nodes "4" --max-nodes "10" --node-locations "$ZONE"
+gcloud beta container --project $PROJECT_ID clusters create "${CLUSTER_NAME}" --zone "$ZONE" --no-enable-basic-auth  --release-channel "regular" --machine-type "e2-standard-4" --image-type "COS_CONTAINERD" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/$PROJECT_ID/global/networks/default" --subnetwork "projects/$PROJECT_ID/regions/$REGION/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --workload-pool "${PROJECT_ID}.svc.id.goog" --enable-shielded-nodes --enable-autoscaling --min-nodes "4" --max-nodes "10" --node-locations "$ZONE"
 ```
 
 *FOR LAB 3-5*: Create the cluster - This will take several minutes
 ```
-gcloud beta container --project $PROJECT_ID clusters create "${CLUSTER_NAME}" --zone "$ZONE" --no-enable-basic-auth --release-channel "regular" --machine-type "e2-standard-4" --image-type "COS_CONTAINERD" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/$PROJECT_ID/global/networks/default" --subnetwork "projects/$PROJECT_ID/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --workload-pool "${PROJECT_ID}.svc.id.goog" --enable-shielded-nodes --enable-autoscaling --min-nodes "4" --max-nodes "10" --node-locations "$ZONE" && gcloud beta container --project $PROJECT_ID node-pools create "istio-nodepool" --cluster "$CLUSTER_NAME" --zone "$ZONE" --machine-type "e2-standard-4" --image-type "COS_CONTAINERD" --disk-type "pd-standard" --disk-size "100" --node-labels istio-nodepool=true --metadata disable-legacy-endpoints=true,istio-nodepool=true --node-taints istio=true:NoSchedule --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "4" --enable-autoscaling --min-nodes "$MIN_ISTIO_NODES" --max-nodes "7" --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --node-locations "$ZONE"
+gcloud beta container --project $PROJECT_ID clusters create "${CLUSTER_NAME}" --zone "$ZONE" --no-enable-basic-auth --release-channel "regular" --machine-type "e2-standard-4" --image-type "COS_CONTAINERD" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/$PROJECT_ID/global/networks/default" --subnetwork "projects/$PROJECT_ID/regions/$REGION/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --workload-pool "${PROJECT_ID}.svc.id.goog" --enable-shielded-nodes --enable-autoscaling --min-nodes "4" --max-nodes "10" --node-locations "$ZONE" && gcloud beta container --project $PROJECT_ID node-pools create "istio-nodepool" --cluster "$CLUSTER_NAME" --zone "$ZONE" --machine-type "e2-standard-4" --image-type "COS_CONTAINERD" --disk-type "pd-standard" --disk-size "100" --node-labels istio-nodepool=true --metadata disable-legacy-endpoints=true,istio-nodepool=true --node-taints istio=true:NoSchedule --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --num-nodes "4" --enable-autoscaling --min-nodes "$MIN_ISTIO_NODES" --max-nodes "7" --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --node-locations "$ZONE"
 ```
 
 ### Download Istio 
@@ -65,7 +76,7 @@ chmod +x install_asm
 ### 5. Connect to the GKE cluster
 Once the cluster is up and running connect to it via Cloud SDK
 ```
-gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project $PROJECT_ID
+gcloud container clusters get-credentials $CLUSTER_NAME --zone $REGION --project $PROJECT_ID
 ```
 
 ### 6. Install the Bookinfo app 
@@ -106,3 +117,9 @@ This lab walks you through a migration from a default Istio deployment to a defa
 ### [Lab 4: Migrating from IstioOperator deployed Istio to ASM using a custom overlay file](/docs/Lab4-Migrating-with-custom-overlay.md)
 
 > Companies running Istio in production will have modified Istio control plane to ensure resilience and high availability. In order to ensure the same configurations around horizontal pod autoscaling, AntiAffinity, resource quotas, as well as any other customizations compared to the available Istio profiles, we will use an overlay file furing the ASM installation. 
+
+### [Lab 5: Upgrading ASM](/docs/Lab5-Upgrading-ASM.md)
+
+> In this lab we will walk through the upgrade process for ASM.
+This lab assumes you have gone through Lab 4 and have ASM MeshCA version 1.10.2-asm.3 running.
+Lab 4 used the "canary" method to ensure we achieve zero downtime during the migration, we will use the upgrade to prep for in-place upgrades for future upgrade methods, meaning we will use the same revision label going forward. This will cause ASM to install the new version over the existing one and we will update the IGWs and applciations by simply performing a rollout update, without having to modify any labels going forward. 
